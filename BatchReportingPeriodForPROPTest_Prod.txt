@@ -1,0 +1,159 @@
+@isTest
+public class BatchReportingPeriodForPROPTest {
+    
+    @testsetup public static void testData(){
+        Account acc = new Account();
+        acc.name = 'Test Account';
+        acc.BillingStreet = '3022  Strother Street';
+        acc.BillingCity = 'Into';
+        acc.BillingState = 'Alabama';
+        acc.BillingPostalCode = '35222';
+        acc.BillingCountry = 'US';
+        Insert acc;
+    }
+
+    public static testmethod void method1(){
+        
+        Trigger_Settings__c TSC = new Trigger_Settings__c();
+        TSC.Name = 'RoyaltyReportingPeriodTriggerByRes';
+        TSC.RoyaltyReportingPeriodTriggerByRes__c = true;
+        insert TSC;
+        
+        Account acc = [Select Id from Account Limit 1];
+        
+        RecordType rt = [Select Id from recordType where DeveloperName = 'PropagatorAgreement'];
+        
+        Date tempDate = date.ValueOf('2018-01-31');
+        Agreement__c agree = new Agreement__c();
+        agree.RecordTypeId = rt.Id;
+        agree.Account__c = acc.Id;
+        agree.Name = 'Test Agreement 1';
+        agree.Status__c = 'Active';
+        agree.Reporting_Frequency__c = 'Monthly';
+        Insert agree;
+        
+        if(agree.Id != Null){
+            Royalty_Reporting_Period__c rrp1 = new Royalty_Reporting_Period__c();
+       
+            rrp1.Start_date__c 	= tempDate.addDays(1);
+            rrp1.End_date__c	= tempDate.addDays(20);
+            rrp1.Status__c     	= 'Ready';
+            rrp1.Frequency__c	= 'Monthly';
+            rrp1.Agreement__c 	= agree.Id;
+            Insert rrp1;
+        }
+        
+        BatchReportingPeriodForPROP batch = new BatchReportingPeriodForPROP();
+        //Database.executeBatch(batch,1);
+        
+        test.startTest();
+        Id batchJobId = Database.executeBatch(batch, 1);
+        test.stopTest();
+      
+                
+    }
+    
+    public static testmethod void method2(){
+        
+        Trigger_Settings__c TSC = new Trigger_Settings__c();
+        TSC.Name = 'RoyaltyReportingPeriodTriggerByRes';
+        TSC.RoyaltyReportingPeriodTriggerByRes__c = true;
+        insert TSC;
+        
+        Account acc = [Select Id from Account Limit 1];
+        
+        RecordType rt = [Select Id from recordType where DeveloperName = 'PropagatorAgreement'];
+        
+        Date tempDate = date.ValueOf('2018-01-31');
+        Agreement__c agree = new Agreement__c();
+        agree.RecordTypeId = rt.Id;
+        agree.Account__c = acc.Id;
+        agree.Name = 'Test Agreement 1';
+        agree.Status__c = 'Active';
+        agree.Reporting_Frequency__c = 'Quarterly';
+        Insert agree;
+
+        BatchReportingPeriodForPROP batch = new BatchReportingPeriodForPROP();
+        Database.executeBatch(batch,1);
+        
+    }
+    
+    public static testmethod void method3(){
+        
+             Trigger_Settings__c TSC = new Trigger_Settings__c();
+        TSC.Name = 'RoyaltyReportingPeriodTriggerByRes';
+        TSC.RoyaltyReportingPeriodTriggerByRes__c = true;
+        insert TSC;
+        
+       	List<Royalty_Reporting_Period__c> lstRRP = new List<Royalty_Reporting_Period__c>();
+       	Account acc = [Select Id from Account Limit 1];
+        
+        RecordType rt = [Select Id from recordType where DeveloperName = 'PropagatorAgreement'];
+        
+        Date tempDate = date.ValueOf('2018-01-31');
+        Agreement__c agree = new Agreement__c();
+        agree.RecordTypeId = rt.Id;
+        agree.Account__c = acc.Id;
+        agree.Name = 'Test Agreement 1';
+        agree.Status__c = 'Active';
+        agree.Reporting_Frequency__c = 'Quarterly';
+        Insert agree;
+        
+        if(agree.Id != Null){
+            tempDate = system.today();
+            tempDate = tempDate.addMonths(-3);
+            Royalty_Reporting_Period__c rrp1 = new Royalty_Reporting_Period__c();
+            rrp1.Start_date__c 	= tempDate.addDays(1);
+            rrp1.End_date__c	= tempDate.addMonths(3);
+            rrp1.Status__c     	= 'Ready';
+            rrp1.Frequency__c	= 'Monthly';
+            rrp1.Agreement__c 	= agree.Id;
+           	Insert rrp1;
+        }
+        
+        BatchReportingPeriodForPROP batch = new BatchReportingPeriodForPROP();
+        Database.executeBatch(batch,1);
+
+        
+    }
+    //added by priyanka
+     public static testmethod void method4(){
+         
+        Trigger_Settings__c TSC = new Trigger_Settings__c();
+        TSC.Name = 'RoyaltyReportingPeriodTriggerByRes';
+        TSC.RoyaltyReportingPeriodTriggerByRes__c = true;
+        insert TSC;
+        
+       	List<Royalty_Reporting_Period__c> lstRRP = new List<Royalty_Reporting_Period__c>();
+         Account acc = [Select Id from Account Limit 1];
+         
+         RecordType rt = [Select Id from recordType where DeveloperName = 'PropagatorAgreement'];
+         
+        Date tempDate = date.ValueOf('2018-01-31');
+        Agreement__c agree = new Agreement__c();
+         agree.RecordTypeId = rt.Id;
+        agree.Account__c = acc.Id;
+        agree.Name = 'Test Agreement 1';
+        agree.Status__c = 'Active';
+        agree.Reporting_Frequency__c = 'Monthly';
+        Insert agree;
+        
+        if(agree.Id != Null){
+            tempDate = system.today();
+            tempDate = tempDate.addMonths(-3);
+            Royalty_Reporting_Period__c rrp1 = new Royalty_Reporting_Period__c();
+            rrp1.Start_date__c 	= tempDate.addDays(1);
+            rrp1.End_date__c	= tempDate.addMonths(3);
+            rrp1.Status__c     	= 'Ready';
+            //rrp1.Frequency__c	= 'Monthly';
+            rrp1.Agreement__c 	= agree.Id;
+            
+          	Insert rrp1;
+        }
+        
+        BatchReportingPeriodForPROP batch = new BatchReportingPeriodForPROP();
+        Database.executeBatch(batch,1);
+
+        
+    }
+}

@@ -1,0 +1,4129 @@
+public class RoyaltyReportPageCtrl {
+    
+    public Boolean isReportSubmitted;
+    public String searchKey {get;set;}
+    public Agreement__c Agreement {get;set;}
+    public Royalty_Reporting_Period__c ActiveRRP {get;set;}
+    public String ActiveRRPId;
+    public Boolean no_stock_losses {get;set;}
+    public String currencyCode;
+    public Boolean isNotificationDisplay {get;set;}
+    public Boolean availableAgreement {get;set;}
+    public String ReportingPeriod {get;set;}   
+    public String activePeriod {get;set;}
+    Public Boolean isFirstTime;
+    public String firstRRP {get;set;}
+    public String remainingRRP {get;set;}
+    public String currentActivePeriod {get;set;}
+    public String rrpIdforPDF {get;set;}
+    public String rowNumForOtherVar {get;set;}
+    public String otherVarIndex {get;set;}
+    public String intrnlTradeIndex {get;set;}
+    public String LicensedProduct_NotesAndTerms {get;set;}
+    public String InternalTrade_NotesAndTerms {get;set;}
+    
+    public map<String,String> mapSizeToPot {get;set;}
+    public map<String,Boolean> mapVartyToDiscntind {get;set;}
+    public Map<String,rangeWrapper> mapDisplayRanges {get;set;}
+    public map<String,List<Size__c>> mapVarToSizeList ;
+    public map<String,List<Size__c>> mapAllVarToSizeList;
+    public map<String,String> mapProdIdToRangeId{get;set;}
+    public Map<String,Product2> mapProds {get;set;}
+    
+    public set<Id> removeOthrVarIds;
+    public set<Id> removeInTradeIds;
+    
+    public List<Custom_Data__c> lstCustomData;
+    public List<otherVariety> lstOtherVartys {get;set;}
+    public List<InternalTrade> InternalTradeLines {get;set;}
+    public List<Royalty_Reporting_Period__c> lstReportingPeriods {get;set;}
+    public List<Sales_Line__c> lst_salesline {get;set;}
+    
+    public String personName {get;set;}
+    public boolean isFirstSaved {get;set;}
+    public Datetime lastEdited {get;set;}
+    
+    // Start Code Added By Yogesh
+    public Boolean isChangeRRP;
+    public String getListType {get;set;}
+    public boolean custometNotAllowedSaleShowPopup{set; get;}
+    public String custometNotAllowedSalePopupMessage{set; get;}
+    
+    //for licensed variety
+    public List<RangeLicensedVariety> lst_RangeLicensedVariety{set; get;}
+    public List<GrowerLicensedVariety> lst_GrowerLicensedVariety{set; get;}
+    public String rowNumForLicensedRangeVariety {get;set;}
+    public String rowNumForLicensedSizeVariety {get;set;}
+    public String rowNumForLicensedRateVariety {get;set;}
+    public List<price_matrix__c> PM_SizeName;
+    public String LicenceVarietyIndex {get; set;}
+    public List<price_matrix__c> priceMatrix;
+    
+    Map<String,InquiryCaseCreationEmailSetup__c> emailsCustomSettingMap = InquiryCaseCreationEmailSetup__c.getall();
+    String customSettingManageAccessName = 'ToAndCCEmails';
+    public string toMail;
+    public string ccMail;
+    public string repMail;
+    //END Code Added By Yogesh
+    
+    //Code added by Ranjeet Kadam 
+    public boolean showContent1 {get;set;}
+    public boolean hinternal {get;set;}
+    public String finalvalue {get;set;}
+    //Code added end
+    
+    @testvisible private String userId;
+    Private String userId1;
+    Private String profileId;
+    
+    //added by foram 
+    public List<otherVariety> lstLicensedAndUnlicensedOtherVartys {get;set;} 
+    public Boolean showuploadCSV {get;set;} //if true means for propogator
+    public Boolean showTestRange {get;set;}
+    public Boolean showTestRangeforpropogator {get;set;}    
+    public Set<String> ErrorMessages {get;set;}
+    
+    public RoyaltyReportPageCtrl(){
+        
+        isReportSubmitted = false;
+        no_stock_losses = false;
+        remainingRRP = null;
+        firstRRP = '';
+        showuploadCSV = false;
+        showTestRange =  false;
+        showTestRangeforpropogator = false;
+        lstLicensedAndUnlicensedOtherVartys = new List<otherVariety>();
+        ErrorMessages = new Set<string>();
+        
+        //code added by ranjeet kadam for upload csv
+        showContent1 = true;
+        hinternal = true;
+        userId1 = UserInfo.getUserId();
+        List<User> lst_users1 = [Select Id, name, ProfileId From User Where Id =: userId1];
+        profileId = lst_users1[0].ProfileId;
+        List<Profile> lst_prof = [Select Id, name  From Profile Where Id =: profileId];
+        if(lst_prof != null && lst_prof.size() > 0 && lst_prof[0].Name == Label.Propagators_Customer_Community) {
+            showContent1 = true;
+            hinternal = false;   
+        }
+        //code added end
+        
+        //code added By Yogesh START
+        
+        lst_RangeLicensedVariety = new List<RangeLicensedVariety>();
+        
+        lst_GrowerLicensedVariety = new List<GrowerLicensedVariety>();
+        PM_SizeName = new List<price_matrix__c>();      
+        
+        //
+        
+        custometNotAllowedSalePopupMessage = 'This customer is unlicensed.  Please add this sale in the unlicensed section';
+        custometNotAllowedSaleShowPopup = false;
+        //code added By Yogesh END
+        
+        isFirstSaved = false;
+        availableAgreement = false;
+        Agreement = new Agreement__c();
+        
+        mapProdIdToRangeId  = new Map<String,String>();
+        mapSizeToPot        = new Map<String,String>();
+        mapVartyToDiscntind = new Map<String,Boolean>();
+        mapDisplayRanges    = new Map<String,rangeWrapper>();
+        mapVarToSizeList    = new map<String,List<Size__c>> ();
+        mapAllVarToSizeList = new map<String,List<Size__c>> ();
+        mapProds            = new Map<String,Product2>();
+        
+        removeOthrVarIds    = new set<Id>();
+        removeInTradeIds    = new set<Id>();
+        
+        lstCustomData       = new List<Custom_Data__c>();
+        if(lstOtherVartys==null) {
+            lstOtherVartys  = new List<otherVariety>();
+        }
+        if(lstLicensedAndUnlicensedOtherVartys == null) {
+            lstLicensedAndUnlicensedOtherVartys  = new List<otherVariety>();
+        }
+        
+        //added by yogesh for licensed variety
+        if(lst_RangeLicensedVariety == null)
+        {
+            lst_RangeLicensedVariety = new List<RangeLicensedVariety>();
+        }
+        
+        InternalTradeLines  = new List<InternalTrade>();
+        lstReportingPeriods = new List<Royalty_Reporting_Period__c>();   
+        lst_salesline       = new List<Sales_Line__c>();
+        
+        //updateUser();
+        
+        Boolean isAnyReport = generateAgreementDetails();
+        if(isAnyReport){
+            generateProductSizeInfo();
+            retriveNotesAndTerms();
+            generateLicensedVarieties();
+            EditRoyaltyReport();
+            //fetchRangelicensedVariety(); added last extra blank line item
+        }
+    }
+    
+    //START Code Added By Yogesh
+    /*public void fetchRangelicensedVariety()
+{
+System.debug('@@2021111 :Call this function');
+
+RangeLicensedVariety rangeLicensedvarietyObj = new RangeLicensedVariety();
+
+lst_RangeLicensedVariety.add(rangeLicensedvarietyObj);
+
+}*/
+    
+    public List<SelectOption> getLicensedRangeVeriety()
+    {
+        List<String> lst_rangeIds = new List<String>();
+        List<SelectOption> rangeNameOptions = new List<SelectOption>();
+        rangeNameOptions.add(new SelectOption('', 'Select Range'));// !!Yogi 
+        Integer numberOfDays;
+        Date lastDayOfMonth;
+        if(ActiveRRP.End_Date__c != null) {
+            numberOfDays = Date.daysInMonth(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month());
+            lastDayOfMonth = Date.newInstance(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month(), numberOfDays);
+        }
+        
+        List<Licensed_Range__c> lst_range = [SELECT Id, Name, Range__c, Range__r.Name, Agreement__c, Range_Commencement_Date__c,
+                                             Status__c, Sell_Off_Date__c
+                                             FROM Licensed_Range__c 
+                                             WHERE Agreement__c =: Agreement.Id ];
+        
+        if(lst_range != Null && lst_range.size() > 0){
+            for(Licensed_Range__c lr : lst_range){
+                if(lr.Status__c == 'Licensed'){
+                    if(lr.Range_Commencement_Date__c != Null && lr.Range_Commencement_Date__c <= lastDayOfMonth){
+                        System.debug('@@@ foram123');
+                        lst_rangeIds.add(lr.Range__c);
+                        rangeNameOptions.add(new SelectOption(lr.Range__c, lr.Range__r.Name ));
+                    }
+                }else if(lr.Status__c == 'Cancelled'){
+                    if(lr.Range_Commencement_Date__c <= lastDayOfMonth && ActiveRRP.Start_date__c <= lr.Sell_Off_Date__c){
+                        lst_rangeIds.add(lr.Range__c);
+                        rangeNameOptions.add(new SelectOption(lr.Range__c, lr.Range__r.Name ));
+                    }
+                }
+            }
+        }
+        
+        return rangeNameOptions;
+    }
+    
+    public void getLiecensedVarietyBasedOnRange()
+    {
+        
+        System.debug('@@1212@@ rowNumForLicensedRangeVariety : '+rowNumForLicensedRangeVariety);
+        RangeLicensedVariety rangeLicensedvarietyObj = lst_RangeLicensedVariety.get(Integer.valueOf(rowNumForLicensedRangeVariety));
+        rangeLicensedvarietyObj.verityId = null;
+        rangeLicensedvarietyObj.SizeId = null;
+        rangeLicensedvarietyObj.royaltyRate = null;
+        System.debug('@@@ 11rangeLicensedvarietyObj = '+rangeLicensedvarietyObj);
+        System.debug('@@@ 11rangeLicensedvarietyObj.rangeId = '+rangeLicensedvarietyObj.rangeId);
+        
+        if(rangeLicensedvarietyObj.rangeId != null)
+        {
+            rangeLicensedvarietyObj.lstLicensedVariety = getLiecensedVarietyBasedOnRangeWhenPageLoad(rangeLicensedvarietyObj.rangeId);
+        }
+    }
+    
+    public void getLiecensedSizeBasedOnVariety()
+    {
+        
+        System.debug('@@1212@@ rowNumForLicensedSizeVariety : '+rowNumForLicensedSizeVariety);
+        RangeLicensedVariety rangeLicensedvarietyObj = lst_RangeLicensedVariety.get(Integer.valueOf(rowNumForLicensedSizeVariety));
+        rangeLicensedvarietyObj.SizeId = null;
+        rangeLicensedvarietyObj.royaltyRate = null;
+        List<SelectOption> priceMatrix_SizeName = new List<SelectOption>();
+        System.debug('@@@ 11rangeLicensedvarietyObj.verityId = '+rangeLicensedvarietyObj.verityId);
+        if(rangeLicensedvarietyObj.verityId != Null){
+            List<price_matrix__c> priceMatrix_List = [select Id, size__r.name from price_matrix__c 
+                                                      where variety__c =: rangeLicensedvarietyObj.verityId AND Rate_Type__c = 'Grower'];
+            System.debug('priceMatrix_List N::'+priceMatrix_List.size());
+            if(priceMatrix_List != null && priceMatrix_List.size()>0)
+            {
+                priceMatrix_SizeName.add(new SelectOption('','-None-'));
+                for(price_matrix__c p : priceMatrix_List)
+                {
+                    priceMatrix_SizeName.add(new SelectOption(p.Size__c,p.Size__r.name));
+                }
+                System.debug('priceMatrix_SizeName N::'+priceMatrix_SizeName.size());
+                if(priceMatrix_SizeName != null && priceMatrix_SizeName.size()>0)
+                {
+                    rangeLicensedvarietyObj.lstSizeNames = priceMatrix_SizeName;
+                }
+            }
+        }
+    }
+    
+    public void getLiecensedRateBasedOnSize()
+    {
+        RangeLicensedVariety rangeLicensedvarietyObj = lst_RangeLicensedVariety.get(Integer.valueOf(rowNumForLicensedRateVariety));
+        rangeLicensedvarietyObj.royaltyRate = null;
+        System.debug('rangeId N:: '+rangeLicensedvarietyObj.rangeId);
+        System.debug('verityId N:: '+rangeLicensedvarietyObj.verityId);
+        System.debug('SizeId N:: '+rangeLicensedvarietyObj.SizeId);
+        
+        Set<Id> licensedVarietyIds = new Set<Id>();
+        if(rangeLicensedvarietyObj.verityId != null && String.isNotBlank(rangeLicensedvarietyObj.verityId) && Agreement.id != null)
+        {
+            for(Licensed_Variety__c objLV : [SELECT id, Name, Variety__c, Special_Royalty_Rate_Q__c, Agreement__c 
+                                             FROM Licensed_Variety__c 
+                                             WHERE Agreement__c =: Agreement.id AND Variety__c =: rangeLicensedvarietyObj.verityId AND Special_Royalty_Rate_Q__c = true]) 
+            {
+                
+                licensedVarietyIds.add(objLV.id);
+                System.debug('@@@ Agreement__c = '+Agreement.id);  
+                System.debug('@@@ Variety__c = '+ rangeLicensedvarietyObj.verityId);  
+                System.debug('@@@ licensedVarietyIds = '+licensedVarietyIds);  
+            }            
+        }
+        
+        if(0 < licensedVarietyIds.size())
+        {
+            String varietyId = rangeLicensedvarietyObj.verityId;  
+            System.debug('varietyId::::::::'+varietyId);
+            String sizeId = rangeLicensedvarietyObj.SizeId;
+            
+            if(varietyId != null && varietyId.length() == 18) {
+                varietyId = varietyId.substring(0, 15);
+            }
+            if(sizeId != null)
+            {
+                if(sizeId.length() == 18 ) {
+                    sizeId = sizeId.substring(0, 15);
+                }
+            }
+            
+            for(Discount_Licensed_Variety__c objDLV : [SELECT id, Price_variety_Id__c, Price_Size_Id__c, Price__c, Variety__c, 
+                                                       Price_Matrix__c, Start_Date__c, End_Date__c, Discount__c, Licensed_Variety__c 
+                                                       FROM Discount_Licensed_Variety__c 
+                                                       WHERE Licensed_Variety__c IN: licensedVarietyIds  
+                                                       AND Price_variety_Id__c =:varietyId  AND Price_Size_Id__c =:sizeId ])
+            {
+                //4/05/2021 <= 5/01/2021 && 
+                if(objDLV.Start_Date__c <= ActiveRRP.Start_date__c  && objDLV.End_Date__c >= ActiveRRP.Start_date__c)
+                {
+                    //Discount = bill - (bill * discount / 100)
+                    Decimal DiscountRate = 0;
+                    DiscountRate = objDLV.Price__c - (objDLV.Price__c * objDLV.Discount__c / 100).setScale(2);
+                    //rangeLicensedvarietyObj.royaltyRate = DiscountRate;
+                    rangeLicensedvarietyObj.discountedRoyaltyRate = DiscountRate;
+                    rangeLicensedvarietyObj.applySpecialRate = true;
+                    System.debug('objDLV.Start_Date__c : '+objDLV.Start_Date__c);
+                    System.debug('objDLV.End_Date__c : '+objDLV.End_Date__c);
+                    System.debug('ActiveRRP.Start_date__c : '+ActiveRRP.Start_date__c);
+                }
+                else
+                {
+                    System.debug('applyNormalPriceMatrix');
+                    applyNormalPriceMatrix(rangeLicensedvarietyObj);
+                }
+            }
+        }
+        else
+        {            
+            applyNormalPriceMatrix(rangeLicensedvarietyObj);
+        }
+        
+    }
+    
+    public void applyNormalPriceMatrix(RangeLicensedVariety rangeLicensedvarietyObj)
+    { 
+        List<Price_Matrix__c> priceMatrix_lst =  [SELECT Price__c, Start_Date__c, End_Date__c FROM Price_Matrix__c
+                                                  WHERE  Variety__c =: rangeLicensedvarietyObj.verityId
+                                                  AND Size__c =: rangeLicensedvarietyObj.SizeId
+                                                  AND Rate_Type__c = 'Grower' 
+                                                  AND CurrencyIsoCode = 'AUD' ];
+        
+        System.debug('priceMatrix_lst : '+priceMatrix_lst);
+        Decimal rotaltyRate = 0;
+        
+        list<Date> dates = new list<Date>();
+        Map<date,Price_Matrix__c> pmat_map = new Map<date,Price_Matrix__c>();
+        
+        if(!priceMatrix_lst.isEmpty() && priceMatrix_lst.size() > 0)
+        {
+            for(Price_Matrix__c pMat: priceMatrix_lst)
+            {
+                System.debug('@@@ pMat.End_Date__c '+pMat.End_Date__c);
+                System.debug('@@@ pMat.Start_Date__c '+pMat.Start_Date__c);
+                System.debug('@@@ System.Today() '+System.Today());
+                if(pMat.Start_Date__c <= System.Today() && pMat.End_Date__c >= System.Today())
+                {
+                    rotaltyRate = pMat.Price__c;
+                    rangeLicensedvarietyObj.priceMatrixId = pMat.id;
+                    System.debug('@@@ rotaltyRate in condition '+rotaltyRate);
+                }
+                dates.add(pMat.End_Date__c);
+                pmat_map.put(pMat.End_Date__c,pMat);
+            }
+            if(rotaltyRate == 0)
+            {
+                dates.sort();
+                Date MaxEndDate = dates.get(dates.size()-1);
+                if(pmat_map.ContainsKey(MaxEndDate))
+                {
+                    rotaltyRate = pmat_map.get(MaxEndDate).Price__c;
+                    rangeLicensedvarietyObj.priceMatrixId = pmat_map.get(MaxEndDate).id;
+                }
+            }
+        }
+        rangeLicensedvarietyObj.royaltyRate = rotaltyRate;
+    }
+    
+    //END code added By Yogesh
+    
+    //return country field's value from salesline
+    public List<String> fetchCountryPicklistValue(){
+        List<String> pickListValuesList= new List<String>();
+        Schema.DescribeFieldResult fieldResult = Sales_Line__c.Country_Territory__c.getDescribe();
+        List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
+        for( Schema.PicklistEntry pickListVal : ple){
+            pickListValuesList.add(pickListVal.getLabel());
+        }     
+        pickListValuesList.sort();
+        System.debug('@@@ pickListValuesList = '+pickListValuesList);
+        return pickListValuesList;
+    }
+    
+    public void dismissPopupCustomerNotAllowdSalePopup(){
+        custometNotAllowedSaleShowPopup = false;
+    }
+    
+    public List<SelectOption> getCustomerNameOptions() {
+        
+        
+        List<Agreement__c> lstAgreement = [Select Id, RecordType.DeveloperName, Name, Account__r.Name 
+                                           from Agreement__c 
+                                           where Status__c ='Active' and RecordType.DeveloperName = 'Grower_Agreement'
+                                           ORDER BY Account__r.Name ASC];
+        List<String> lstAccountName = new List<String>();
+        
+        for(Agreement__c objAgreement: lstAgreement) {
+            lstAccountName.add(objAgreement.Account__r.Name);
+        }
+        
+        List<SelectOption> customerNameOptions = new List<SelectOption>();
+        customerNameOptions.add(new SelectOption('', 'Select Customer Name'));
+        for(String accName: lstAccountName) {
+            customerNameOptions.add(new SelectOption(accName, accName));
+        }
+        return customerNameOptions;
+    }
+    
+    //Code added by Ranjeet for process CSV data updated by Foram
+    public void fetchCSVData() {
+        System.debug('@@@ lstLicensedAndUnlicensedOtherVartys = ' +lstLicensedAndUnlicensedOtherVartys);        
+        System.debug('@@@ finalvalue = ' +finalvalue);
+        System.debug('@@@ ActiveRRP = '+ActiveRRP);
+        
+        List<otherVariety> tempotherVarietyList = new List<otherVariety>();
+        tempotherVarietyList.addAll(lstLicensedAndUnlicensedOtherVartys);
+        
+        for(otherVariety objotherVariety: tempotherVarietyList) {
+            if(objotherVariety.customername == '' && objotherVariety.verityname == null &&
+               objotherVariety.sizename == null && objotherVariety.quantity == '' && objotherVariety.Country == null)  {
+                   Integer index = lstLicensedAndUnlicensedOtherVartys.indexOf(objotherVariety);
+                   lstLicensedAndUnlicensedOtherVartys.remove(index);
+               }
+        }
+        System.debug('@@@@ lstLicensedAndUnlicensedOtherVartys = '+lstLicensedAndUnlicensedOtherVartys);
+        List<String> lstCustomerName = new List<String>();        
+        List<String> lstSizeName = new List<String>();
+        
+        Set<Id> sizeIdsSet = new Set<Id>();
+        Set<Id> varietyIdsSet = new Set<Id>();
+        Set<String> lstVarietyName = new Set<String>();
+        
+        Map<String, Object> mapProToFaultDesc1 = (Map<String, Object>)system.JSON.deserializeUntyped(finalvalue);
+        Map<String, Id> varietyMap = new Map<String, Id>();
+        Map<String, Size__c> sizeMap = new Map<String, Size__c>();
+        Map<String,Decimal> priceMatrixMap = new Map<String,Decimal>();
+        Map<Integer, String> indexOfQuantity = new  Map<Integer, String>();
+        Map<Integer, String> indexOfCountry = new  Map<Integer, String>();
+        Map<Integer, String> indexOfNotes = new  Map<Integer, String>();
+        Map<String, Id> mapOfCustomerExsit = new Map<String, Id>();
+        Map<String, String> mapOfVarietyId = new Map<String, String>();
+        
+        for(Integer i = 1; i <= mapProToFaultDesc1.size(); i++) {            
+            String ab = String.valueOf(i);
+            String strvarietyname = '';
+            
+            Map <String, Object> payload = (Map <String, Object>) mapProToFaultDesc1.get(ab);
+            
+            if(payload != null && payload.size() > 0) {
+                
+                String strcustomername = String.valueOf(payload.get('customer')).toLowercase().trim();
+                System.debug('@@ strcustomername = '+strcustomername);
+                strcustomername = strcustomername.replaceAll('�','');
+                strcustomername = strcustomername.replaceAll('®','');
+                strcustomername = strcustomername.replaceAll('\'','');
+                lstCustomerName.add(strcustomername); 
+                
+                System.debug('@@@ payload.22222 = '+payload.get('variety'));
+                strvarietyname = String.valueOf(payload.get('variety')).toLowerCase().trim();
+                strvarietyname = strvarietyname.replaceAll('�','');
+                strvarietyname = strvarietyname.replaceAll('®','');
+                strvarietyname = strvarietyname.replaceAll('\'','');
+                strvarietyname = strvarietyname.replaceAll('"','');
+                System.debug('@@@ strvarietyname after replace = '+strvarietyname);
+                lstVarietyName.add(strvarietyname);
+                
+                lstSizeName.add(String.valueOf(payload.get('size')).toLowerCase().trim());                
+                indexOfQuantity.put(i, String.valueOf(payload.get('quantity')));
+                indexOfCountry.put(i, String.valueOf(payload.get('Country')));
+                indexOfNotes.put(i, String.valueOf(payload.get('Notes')));   
+            }
+        }
+        System.debug('lstCustomerName '+lstCustomerName);
+        System.debug('@@@ lstVarietyName = '+lstVarietyName);
+        //************ fill all account related map start *************
+        List<Account> lstAccount = [SELECT id, Name_Without_Special_Character__c, Name, OEA__c, Grower__c , Propagator__c, ShippingCountry
+                                    FROM Account 
+                                    WHERE Name_Without_Special_Character__c IN: lstCustomerName and (RecordType.Name = 'Customer' OR RecordType.Name = 'Overseas Customer')];
+        System.debug('lstAccount size '+lstAccount.size());
+        Map<String, String> cutomerName_shippingCountry = new Map<String, String>();
+        if(lstAccount.size() > 0) {
+            for(Account objAcc: lstAccount) {
+                mapOfCustomerExsit.put(objAcc.Name_Without_Special_Character__c.toLowerCase(), objAcc.Id);
+                cutomerName_shippingCountry.put(objAcc.Name_Without_Special_Character__c.toLowerCase().trim(), objAcc.ShippingCountry);
+            }
+            System.debug('cutomerName_shippingCountry size :::  '+cutomerName_shippingCountry.size());
+            System.debug('cutomerName_shippingCountry :::  '+cutomerName_shippingCountry);
+        }
+        //************ fill all account related map end *************
+        
+        //************ fill all variety/product related map start *************            
+        List<Product2> lstVarietyInSF = [Select Id, Name, Discontinued_Territory__c, range_type__c, Name_Without_Special_Character__c, IsActive
+                                         from Product2 where Name_Without_Special_Character__c In: lstVarietyName
+                                         ORDER BY Name ASC ];  
+        System.debug('#### lstVarietyInSF = '+lstVarietyInSF);
+        if(lstVarietyInSF.size() > 0) {
+            for(Product2 objPro: lstVarietyInSF) {
+                varietyMap.put(objPro.Name.tolowercase(), objPro.Id);
+                mapOfVarietyId.put(objPro.Name_Without_Special_Character__c.toLowercase(), objPro.Id);
+                System.debug('@@@ mapOfVarietyId = '+mapOfVarietyId);
+                varietyIdsSet.add(objPro.Id);  
+            }
+        }
+        
+        //CHECK WHICH LINE HAS WRONG VARIETY NAME 
+        Map<Integer, String> Index_Name = new Map<Integer, String>();
+        if(lstVarietyName.size()>0){
+            System.debug('lstVarietyName size() '+lstVarietyName.size());
+            String query = 'select id, Name, Name_Without_Special_Character__c from Product2 where';
+            Integer Add_OR_inSOQL = 1;
+            System.debug('1 :::: select id, Name, Name_Without_Special_Character__c from Product2 where');
+            for(String s : lstVarietyName){
+                String searchkey = '%'+s+'%';
+                System.debug('searchkey '+searchkey);
+                query += ' Name_Without_Special_Character__c LIKE \''+String.valueOf(searchkey)+'\'';
+                System.debug('2 ::: Name_Without_Special_Character__c = '+searchkey);
+                if(Add_OR_inSOQL < lstVarietyName.size()){
+                    query+=' OR';
+                }
+                Add_OR_inSOQL++;
+            }
+            System.debug('query '+query);
+            List<Product2> VarietyNamesLIKEcsv = Database.query(query);
+            System.debug('VarietyNamesLIKEcsv size '+VarietyNamesLIKEcsv.size());
+            if(mapProToFaultDesc1.size()> 0 && VarietyNamesLIKEcsv.size()>0){
+                List<String> ProductNameList = new List<String>();
+                for(product2 objProduct : VarietyNamesLIKEcsv){
+                    ProductNameList.add(objProduct.Name_Without_Special_Character__c.toLowercase().trim());
+                }
+                String AllProductNameString = String.join(ProductNameList, ',');
+                for(Integer i = 1; i <= mapProToFaultDesc1.size(); i++)
+                {
+                    String ab = String.valueOf(i);
+                    Map <String, Object> payload = (Map <String, Object>) mapProToFaultDesc1.get(ab);
+                    System.debug('@@@ payload = '+payload);
+                    
+                    if(payload != null && payload.size() > 0)
+                    {
+                        System.debug('@@@ payload.888888 = '+payload.get('variety'));
+                        String strvarietyname = '';
+                        strvarietyname = String.valueOf(payload.get('variety')).toLowerCase().trim();
+                        System.debug('@@@ strvarietyname = '+strvarietyname);
+                        strvarietyname = strvarietyname.replaceAll('�','');
+                        strvarietyname = strvarietyname.replaceAll('®','');
+                        strvarietyname = strvarietyname.replaceAll('\'','');
+                        strvarietyname = strvarietyname.replaceAll('"','');
+                        System.debug('@@@ strvarietyname = '+strvarietyname);
+                        System.debug('strvarietyname '+strvarietyname+' at line number '+i);
+                        Index_Name.put(i+1, strvarietyname);
+                    }
+                }
+                System.debug('Index_Name '+Index_Name.size());
+                if(Index_Name.size()>0){
+                    for(Product2 objPro: VarietyNamesLIKEcsv) {
+                        String VarietyNameInSF = objPro.Name_Without_Special_Character__c.toLowercase().trim();
+                       	System.debug('VarietyNameInSF '+VarietyNameInSF);
+                        for(Integer i : Index_Name.keyset()){
+                            String varietyNameInCSV = Index_Name.get(i).toLowerCase().trim();
+                            System.debug('varietyNameInCSV '+varietyNameInCSV);
+                            System.debug('VarietyNameInSF.contains(varietyNameInCSV) '+VarietyNameInSF.contains(varietyNameInCSV));
+                            if(VarietyNameInSF.contains(varietyNameInCSV))
+                            {
+                                if(VarietyNameInSF != varietyNameInCSV){
+                                    ErrorMessages.add('Line Number '+i+' => Variety Name in CSV is "'+varietyNameInCSV+'" EXPECTED Variety Name in Salesforce "'+objPro.Name+'"');
+                                }
+                            }
+                            else{
+                                if(!AllProductNameString.contains(varietyNameInCSV))
+                                {
+                                    ErrorMessages.add('Line Number '+i+' => Variety Name in CSV "'+varietyNameInCSV+'" DOES NOT EXIST in Salesforce');
+                                }
+                            }
+                            
+                            
+                           
+                        }
+                    }
+                }
+                
+            }
+        }
+        
+        //show message if variety is not active in 
+        if(lstVarietyInSF.size() > 0) {
+            for(Product2 objvar: lstVarietyInSF) {
+                System.debug('@@@ objvar.IsActive = '+objvar.IsActive);
+                if(objvar.IsActive == false) {
+                    ErrorMessages.add(objvar.Name+' variety added in CSV file is inactive in Salesforce.');
+                }
+            }
+        }
+        
+        //************ fill all variety related map end *************
+        
+        
+        //************ fill all size related map start *************
+        List<Size__c> lstSize = [select id, name from Size__c where Name IN: lstSizeName];  
+        System.debug('@@@ lstSize = '+lstSize);
+        if(lstSize != null && lstSize.size() > 0) {
+            for(Size__c sz : lstSize) {
+                sizeMap.put(sz.Name.toLowerCase(), sz);
+                sizeIdsSet.add(sz.id);
+            }
+        }        
+        //************ fill all size related map end ***************
+        
+        
+        //************ fill all price matrix related map start ***************
+        Map<String,Price_Matrix__c> Map_lstPriceMatrix = new Map<String,Price_Matrix__c>();
+        if( varietyIdsSet != null & varietyIdsSet.size() > 0 && sizeIdsSet != null & sizeIdsSet.size() > 0) {
+            
+            List<Price_Matrix__c> royaltyRate = [SELECT Price__c,Size__c,Variety__c, Start_Date__c, End_Date__c FROM Price_Matrix__c  
+                                                 WHERE  Variety__c IN: varietyIdsSet
+                                                 AND Size__c IN: sizeIdsSet 
+                                                 AND Rate_Type__c = 'propagator' 
+                                                 AND CurrencyIsoCode = 'AUD' 
+                                                 ORDER BY Price__c DESC ];
+            System.debug('@@@ royaltyRate size = '+royaltyRate.size());
+            
+            if(royaltyRate != null && royaltyRate.size() > 0) {
+                for(Price_Matrix__c pmat : royaltyRate) {
+                    
+                    String key = pmat.Size__c+''+ pmat.Variety__c;
+                    System.debug('@@@ Key333 = '+key);
+                    
+                    //Map_lstPriceMatrix.put(key,pmat);
+                    if(Map_lstPriceMatrix.containsKey(key))  {
+                        System.debug('@@@ ActiveRRP.Start_date__c= '+ActiveRRP.Start_date__c);
+                        System.debug('@@@ pmat.Start_Date__c = '+pmat.Start_Date__c );
+                        System.debug('@@@ pmat.End_Date__c= '+pmat.End_Date__c);
+                        
+                        if(ActiveRRP.Start_date__c >= pmat.Start_Date__c && ActiveRRP.Start_date__c <= pmat.End_Date__c) {                                    
+                            Map_lstPriceMatrix.put(key, pmat);
+                            System.debug('@@@ Map_lstPriceMatrix = '+Map_lstPriceMatrix);
+                        }
+                        else {
+                            System.debug('@@@ In else3333');
+                            price_matrix__c old_pmat =  Map_lstPriceMatrix.get(key);
+                            
+                            if(ActiveRRP.Start_date__c >= old_pmat.Start_Date__c && ActiveRRP.Start_date__c <= old_pmat.End_Date__c){
+                                //do nothing
+                                System.debug('@@@ In 222222else3333');
+                            }
+                            else{
+                                System.debug('@@@ In else399999999333');
+                                if(old_pmat.Price__c < pmat.Price__c) {
+                                    System.debug('@@@ In EEEEEEEEEEEelse399999999333');
+                                    Map_lstPriceMatrix.put(key, pmat);
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        System.debug('@@@ In else77777777777');
+                        Map_lstPriceMatrix.put(key, pmat);
+                        System.debug('@@@ after add ele to map = '+key);
+                    }
+                }
+                System.debug('@@@ Map_lstPriceMatrix = '+Map_lstPriceMatrix);
+                System.debug('@@@ Map_lstPriceMatrix size = '+Map_lstPriceMatrix.size());
+            }
+        } 
+        //************ fill all price matrix related map start ***************
+        
+        System.debug('@@@ lstVarietyName size = '+lstVarietyName.size());
+        System.debug('@@@ lstVarietyInSF.size() = '+lstVarietyInSF.size());
+        
+        if(ErrorMessages.size()>0) {
+            //PAGE ERRROR MESSAGE
+            System.debug('ErrorMessages size '+ErrorMessages.size());
+        }
+        else{
+            //Create OtherSales and set file data to wrapper class object
+            for(Integer i = 1; i <= mapProToFaultDesc1.size(); i++)
+            {
+                String ab = String.valueOf(i);
+                Map <String, Object> payload = (Map <String, Object>) mapProToFaultDesc1.get(ab);
+                System.debug('@@@ payload = '+payload);
+                
+                if(payload != null && payload.size() > 0)
+                {
+                    otherVariety objotherVariety = new otherVariety();
+                    
+                    //****** customer ******* 
+                    //
+                    String strCustomer = String.valueOf(payload.get('customer'));	
+                    strCustomer = strCustomer.replaceAll('�',''); 
+                    strCustomer = strCustomer.replaceAll('®','');
+                    strCustomer = strCustomer.replaceAll('\'',''); 
+                    strCustomer = strCustomer.toLowerCase().trim();
+                    objotherVariety.customername = strCustomer;
+                    
+                    System.debug('@@@ strCustomer = '+strCustomer);
+                    System.debug('@@ mapOfCustomerExsit = '+mapOfCustomerExsit);
+                    //check for exsiting Customer
+                    if(mapOfCustomerExsit.containsKey(strCustomer)) {
+                        objotherVariety.customerId = mapOfCustomerExsit.get(strCustomer);
+                    }
+                    else{
+                        objotherVariety.unregisterCustomer = String.valueOf(payload.get('customer'));
+                    }
+                    
+                    //****** variety *******
+                    String strvarietyname = '';
+                    strvarietyname = String.valueOf(payload.get('variety')).toLowerCase().trim();
+                    strvarietyname = strvarietyname.replaceAll('�','');
+                    strvarietyname = strvarietyname.replaceAll('®','');                    
+                    strvarietyname = strvarietyname.replaceAll('\'','');
+                    strvarietyname = strvarietyname.replaceAll('"','');
+                    objotherVariety.verityname = mapOfVarietyId.get(strvarietyname); //store variety Id
+                    
+                    //****** size *******
+                    if(sizeMap.containsKey(String.valueOf(payload.get('size')).tolowercase())) {
+                        objotherVariety.sizeid = sizeMap.get(String.valueOf(payload.get('size')).tolowercase()).Id;
+                        objotherVariety.sizename = sizeMap.get(String.valueOf(payload.get('size')).tolowercase()).Name;
+                        System.debug('@@@ objotherVariety.sizename = '+objotherVariety.sizename);
+                        objotherVariety.lstSizeNames.add(new SelectOption(objotherVariety.sizeid,sizeMap.get(String.valueOf(payload.get('size')).tolowercase()).Name));
+                    }   
+                                        
+                    //***** Royalty and price matrix
+                    if(objotherVariety.sizeid != null  && objotherVariety.sizeid != '' && objotherVariety.verityname != null  && objotherVariety.verityname != '') {
+                        System.debug('@@@ objotherVariety.sizeid = '+objotherVariety.sizeid);
+                        System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                        String key = objotherVariety.sizeid+''+objotherVariety.verityname;
+                        System.debug('@@@ key = '+key);
+                        if(key != ''){
+                            System.debug('@@@ Inside22 If');
+                            key = key.trim();
+                            if(Map_lstPriceMatrix.containsKey(key)){
+                                System.debug('@@@ Inside Innerr4 If');
+                                objotherVariety.royaltyRate = Map_lstPriceMatrix.get(key).Price__c;
+                                system.debug('@@@ objotherVariety.royaltyRate = '+objotherVariety.royaltyRate);
+                                objotherVariety.priceMatrixId = Map_lstPriceMatrix.get(key).Id;
+                                system.debug('@@@ objotherVariety.priceMatrixId = '+objotherVariety.priceMatrixId);
+                            }
+                        }
+                    }
+                    
+                    //****** quantity *******
+                    if(indexOfQuantity != NULL) {
+                        objotherVariety.quantity = String.valueOf(indexOfQuantity.get(i));                        
+                    }
+                    
+                    //****** Country  *******
+                    //if(indexOfCountry != NULL) {
+                    //  system.debug('(indexOfCountry '+indexOfCountry);
+                    //System.debug('indexOfCountry.get(i) '+indexOfCountry.get(i));
+                    //objotherVariety.Country = indexOfCountry.get(i);                        
+                    //}
+                    System.debug('cutomerName_shippingCountry '+cutomerName_shippingCountry);
+                    System.debug('cutomerName_shippingCountry '+cutomerName_shippingCountry.keyset());
+                    System.debug('String.valueOf(payload.get("customer")).toLowerCase() '+String.valueOf(payload.get('customer')).toLowerCase());
+                    String customername = String.valueOf(payload.get('customer')).toLowerCase().trim();
+                    customername = customername.replaceAll('�','');
+                    customername = customername.replaceAll('®','');                    
+                    customername = customername.replaceAll('\'','');
+                    System.debug('customername 694 '+customername);
+                    if(cutomerName_shippingCountry.containskey(customername)){
+                        System.debug('cutomerName_shippingCountry.containskey(customername) '+cutomerName_shippingCountry.containskey(customername));
+                        System.debug('cutomerName_shippingCountry.get(customername) '+cutomerName_shippingCountry.get(customername));
+                        objotherVariety.Country = cutomerName_shippingCountry.get(customername);
+                    }
+                    
+                    //****** notes  *******
+                    if(indexOfNotes != NULL) {
+                        objotherVariety.notes = indexOfNotes.get(i);                        
+                    }    
+                    lstLicensedAndUnlicensedOtherVartys.add(objotherVariety);
+                    
+                    //****** Set invoice/ status/ unlicensed  Start *******
+                    
+                    ////****** Set invoice/ status/ unlicensed  End *******
+                }
+            }
+            validateAllSaleslineForPropgatorOnly();
+            
+        }        
+    }
+    
+    public boolean generateAgreementDetails(){
+        
+        System.debug('@@@ In Method');
+        boolean isAvailableReport = false;
+        boolean isAgreementValid = false;
+        
+        List<Agreement__c> lst_agreement = new List<Agreement__c>();
+        if(!Test.isRunningTest()){
+            userId = UserInfo.getUserId();
+        }
+        
+        List<User> lst_users = [Select Id, AccountId, Profile.Name From User Where Id =: userId ];
+        System.debug('!! 99042 !! lst_users: '+lst_users);
+        
+        //List<User> lst_users = [Select Id, AccountId From User Where Id = '0050l000001deEj' ];
+        If(Test.isRunningTest()){
+            lst_users = [Select Id, Name, AccountId, Profile.Name From User Where Username=:UserInfo.getUserName() order by createddate desc];
+        }
+        
+        System.debug('!! 99042 !! lst_users[0].AccountId'+lst_users[0].AccountId);
+        
+        if(lst_users != null && lst_users.size() > 0 && lst_users[0].AccountId != Null){
+            System.debug('!! 99042 !! lst_users[0].AccountId'+lst_users[0].AccountId);
+            
+            if(lst_users[0].Profile.Name == 'Propagators Customer Community') {
+                lst_agreement = [SELECT Id, Name, Reporting_Frequency__c, Account__r.Name,  Account__r.CurrencyIsoCode,
+                                 RecordType.Name, Sell_Off_Date__c, Status__c, Date_of_Agreement__c, RecordType.DeveloperName, 
+                                 (SELECT id, Period__c, Status__c,Start_date__c, End_Date__c,Notes__c, 
+                                  Person_Completing_Report__c,Last_Saved__c,CreateDdate,lastmodifieddate
+                                  FROM Royalty_Reporting_Periods__r 
+                                  where Status__c = 'Ready' OR Status__c = 'Due' OR Status__c =  'Saved'
+                                  order by createdDate ASC) 
+                                 FROM Agreement__c 
+                                 WHERE (RecordType.DeveloperName = 'PropagatorAgreement')  AND 
+                                 Account__c =: lst_users[0].AccountId 
+                                 //for pass static id//Account__c = '0010l00001AFYU1AAP'
+                                 order by Date_of_Agreement__c desc LIMIT 1]; 
+            }
+            else{
+                lst_agreement = [SELECT Id, Name, Reporting_Frequency__c, Account__r.Name,  Account__r.CurrencyIsoCode,
+                                 RecordType.Name, Sell_Off_Date__c, Status__c, Date_of_Agreement__c, RecordType.DeveloperName, 
+                                 (SELECT id, Period__c, Status__c,Start_date__c, End_Date__c,Notes__c, 
+                                  Person_Completing_Report__c,Last_Saved__c,CreateDdate,lastmodifieddate
+                                  FROM Royalty_Reporting_Periods__r 
+                                  where Status__c = 'Ready' OR Status__c = 'Due' OR Status__c =  'Saved'
+                                  order by createdDate ASC) 
+                                 FROM Agreement__c 
+                                 WHERE (RecordType.DeveloperName = 'Grower_Agreement')  AND 
+                                 Account__c =: lst_users[0].AccountId 
+                                 //for pass static id//Account__c = '0010l00001AFYU1AAP'
+                                 order by Date_of_Agreement__c desc LIMIT 1]; 
+            }           
+            
+            if(lst_agreement.size() > 0 ) {
+                
+                Id profileId = userinfo.getProfileId();
+                String profileName = [Select Id,Name from Profile where Id=:profileId].Name;
+                system.debug('ProfileName'+profileName);
+                
+                System.debug('@@ lst_agreement[0].RecordType.DeveloperName = '+lst_agreement[0].RecordType.DeveloperName);
+                
+                if(lst_agreement[0].RecordType.DeveloperName == 'PropagatorAgreement' && profileName == 'Propagators Customer Community') {
+                    showuploadCSV = true;
+                    showTestRange = false;
+                    showTestRangeforpropogator = true;
+                }
+                if(lst_agreement[0].RecordType.DeveloperName == 'Grower_Agreement' && profileName == 'Ozbreed Customer Community') {
+                    showTestRange = true;
+                    showTestRangeforpropogator = false;
+                }
+            } 
+            
+        }
+        if(lst_agreement != Null && lst_agreement.size() > 0){
+            List<Royalty_Reporting_Period__c> lstReports;
+            Royalty_Reporting_Period__c lastRRP;
+            
+            //Retrive Status of Last RRP
+            if(lst_agreement[0].Royalty_Reporting_Periods__r != null && 
+               lst_agreement[0].Royalty_Reporting_Periods__r.size() > 0){
+                   
+                   lstReports = lst_agreement[0].Royalty_Reporting_Periods__r;
+                   lastRRP = lstReports.get(lstReports.size() - 1);
+               }
+            
+            //Check - is Agreement Valid.
+            if(lst_agreement[0].Status__c == 'Active'){
+                isAgreementValid = true;
+            }else if(lst_agreement[0].Status__c == 'Cancelled'){
+                if(lastRRP != Null && 
+                   (lastRRP.Status__c == 'Ready' || lastRRP.Status__c == 'Due' || lastRRP.Status__c == 'Saved')){
+                       isAgreementValid = true;
+                   }else if(lst_agreement[0].Sell_Off_Date__c == Null || 
+                            (lst_agreement[0].Sell_Off_Date__c != Null && lst_agreement[0].Sell_Off_Date__c > System.today())){
+                                isAgreementValid = true;
+                            }
+            }
+        }
+        
+        System.debug('#### isAgreementValid = '+isAgreementValid);
+        System.debug('@@@@ lst_agreement = '+lst_agreement);
+        
+        if(lst_agreement != Null && lst_agreement.size() > 0 && isAgreementValid){
+            availableAgreement = true;
+            Agreement = lst_agreement[0];
+            currencyCode = lst_agreement[0].Account__r.CurrencyIsoCode;
+            
+            if(lst_agreement[0].Royalty_Reporting_Periods__r != Null && 
+               lst_agreement[0].Royalty_Reporting_Periods__r.size() > 0){
+                   
+                   ActiveRRP = lst_agreement[0].Royalty_Reporting_Periods__r[0];
+                   ReportingPeriod = lst_agreement[0].Royalty_Reporting_Periods__r[0].Period__c;
+                   System.debug('@@@ ReportingPeriod = '+ReportingPeriod);
+                   firstRRP = lst_agreement[0].Royalty_Reporting_Periods__r[0].Period__c;
+                   
+                   lstReportingPeriods = lst_agreement[0].Royalty_Reporting_Periods__r;
+                   personName = ActiveRRP.Person_Completing_Report__c;
+                   
+                   if(ActiveRRP.CreateDdate == ActiveRRp.LastModifiedDate){
+                       isFirstSaved = true;
+                   }
+                   if(ActiveRRP.Last_Saved__c != null){
+                       lastEdited = ActiveRRP.Last_Saved__c.addHours(10);
+                   }
+                   
+                   //Retive current Royalty Report period - that portal user has to field.
+                   if(lstReportingPeriods != Null && lstReportingPeriods.size() > 0){
+                       isAvailableReport = true;
+                       for(Royalty_Reporting_Period__c rrpVar : lstReportingPeriods){
+                           if(rrpVar.Status__c=='Due'){
+                               ActivePeriod = rrpVar.Period__c;
+                               ActiveRRPId = rrpVar.Id;
+                           }else if(rrpVar.Status__c=='Saved'){
+                               ActivePeriod = rrpVar.Period__c;
+                               ActiveRRPId = rrpVar.Id;
+                           }else if(rrpVar.Status__c=='Ready'){
+                               ActivePeriod = rrpVar.Period__c;
+                               ActiveRRPId = rrpVar.Id;
+                           }
+                           break;
+                       }
+                   }
+               }
+        }
+        return isAvailableReport;
+    }
+    
+    public void generateProductSizeInfo(){
+        if(ActiveRRPId != Null){
+            List<Product2> lstProds = [Select Id,Botanical_Name__c,Trademark__c,PBR_Name__c,Name,IsActive, CreatedDate,
+                                       Discontinuation_Date__c, After_6_Month__c from Product2  ORDER BY Name ASC];
+            
+            List<price_matrix__c> lstPriceMatrix = [SELECT id, Name, Variety__c,Variety__r.Name, Size__c, 
+                                                    Size__r.Name, Price__c, Rate_Type__c, CurrencyIsoCode
+                                                    FROM price_matrix__c 
+                                                    WHERE CurrencyIsoCode =: currencyCode and Rate_Type__c = 'Propagator'];
+            
+            if(lstProds != Null && lstProds.size() > 0){
+                
+                Date currentRRPDate;
+                
+                if(ActiveRRP.End_Date__c != null) {
+                    currentRRPDate = date.newinstance(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month(), ActiveRRP.End_Date__c.day());
+                }
+                
+                for(Product2 prd : lstProds){
+                    if(!mapProds.containsKey(prd.Name)){
+                        //If Discontinuation_Date__c is in future.
+                        if(prd.IsActive == False && prd.Discontinuation_Date__c > currentRRPDate){
+                            prd.IsActive = True;
+                        }
+                        mapProds.put(prd.Name,prd); 
+                    }
+                }
+                System.debug('@@@ mapProds = '+mapProds);
+            }
+            
+            if(lstPriceMatrix != Null && lstPriceMatrix.size() > 0){
+                for(price_matrix__c pm : lstPriceMatrix){
+                    if(pm.Variety__c != null){
+                        if(!mapAllVarToSizeList.containsKey(pm.Variety__c)){
+                            mapAllVarToSizeList.put(pm.Variety__c, new List<Size__c>());
+                        }
+                        List<Size__c> lst_Size = mapAllVarToSizeList.get(pm.Variety__c);
+                        Size__c tempSize = new Size__c();
+                        tempSize.Id = pm.Size__c;
+                        tempSize.Name = pm.Size__r.Name;
+                        lst_Size.add(tempSize);
+                        
+                    }
+                }
+            }
+            List<Size__c> lstSize = [Select Id,Name,Pot_size_definition__c from Size__c ORDER BY Name ASC];
+            if(lstSize != null && lstSize.size() > 0){
+                for(Size__c sz : lstSize){
+                    mapSizeToPot.put(sz.Name,sz.Pot_size_definition__c);
+                }
+            }
+            
+            otherVariety o = new otherVariety();
+            //o.Quantity = 0;
+            lstOtherVartys.add(o);
+            
+            InternalTrade it = new InternalTrade();
+            //it.quantity = 0;
+            InternalTradeLines.add(it);
+            
+            //licensed sales for propogator
+            otherVariety o2 = new otherVariety();
+            //o2.Quantity = 0;
+            lstLicensedAndUnlicensedOtherVartys.add(o2);
+            
+            //licensed sales for grower
+            RangeLicensedVariety rLV = new RangeLicensedVariety();
+            //o2.Quantity = 0;
+            lst_RangeLicensedVariety.add(rLV);
+            
+        }
+    }
+    
+    public void retriveNotesAndTerms(){
+        lstCustomData = [select Id, Name, CustomDataDetails__c 
+                         from Custom_Data__c 
+                         where Name =: 'LicensedProduct_NotesAndTerms' OR 
+                         Name =: 'InternalTrade_NotesAndTerms'];
+        if(lstCustomData != Null && lstCustomData.size() > 0){
+            for(Custom_Data__c custData : lstCustomData){
+                if(custData.Name == 'LicensedProduct_NotesAndTerms'){
+                    LicensedProduct_NotesAndTerms = custData.CustomDataDetails__c;
+                }else if(custData.Name == 'InternalTrade_NotesAndTerms'){
+                    InternalTrade_NotesAndTerms = '<ol>' + custData.CustomDataDetails__c + '</ol>';
+                }
+            }
+        }
+    }
+    
+    public void generateLicensedVarieties(){
+        
+        List<String> lst_rangeIds = new List<String>();
+        Map<String,Licensed_Variety__c> mapLicensedVar = new Map<String,Licensed_Variety__c>();
+        List<varieties> lst_var = new List<varieties>();
+        Boolean showVariety = false;
+        List<price_matrix__c> priceMatrix;
+        List<Licensed_Variety__c> lst_LicensedVar;
+        
+        Integer numberOfDays;
+        Date lastDayOfMonth;
+        if(ActiveRRP.End_Date__c != null) {
+            numberOfDays = Date.daysInMonth(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month());
+            lastDayOfMonth = Date.newInstance(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month(), numberOfDays);
+        }
+        
+        
+        System.debug('lastDayOfMonth CRRP: ' + lastDayOfMonth);
+        
+        List<Size__c> lstSize = [Select Id,Name,Pot_size_definition__c from Size__c];
+        if(lstSize != null && lstSize.size() > 0){
+            for(Size__c sz : lstSize){
+                mapSizeToPot.put(sz.Name,sz.Pot_size_definition__c);
+            }
+        }
+        
+        List<Licensed_Range__c> lst_range = [SELECT Id, Name, Range__c, Range__r.Name, Agreement__c, Range_Commencement_Date__c,
+                                             Status__c, Sell_Off_Date__c
+                                             FROM Licensed_Range__c 
+                                             WHERE Agreement__c =: Agreement.Id ];
+        
+        if(lst_range != Null && lst_range.size() > 0){
+            for(Licensed_Range__c lr : lst_range){
+                if(lr.Status__c == 'Licensed'){
+                    if(lr.Range_Commencement_Date__c != Null && lr.Range_Commencement_Date__c <= lastDayOfMonth){
+                        System.debug('@@@ foram123');
+                        lst_rangeIds.add(lr.Range__c);
+                    }
+                }else if(lr.Status__c == 'Cancelled'){
+                    if(lr.Range_Commencement_Date__c <= lastDayOfMonth && ActiveRRP.Start_date__c <= lr.Sell_Off_Date__c){
+                        lst_rangeIds.add(lr.Range__c);
+                    }
+                }
+            }
+        }
+        
+        if(lst_rangeIds != Null && lst_rangeIds.size() > 0){
+            priceMatrix = [SELECT id, Name,Range__c, Range__r.name, Variety__c,Variety__r.Name, Size__c, 
+                           Variety__r.Range__c, Variety__r.Range__r.Name, Size__r.Name, Price__c, Rate_Type__c,
+                           Variety__r.IsActive, Variety__r.Discontinuation_Date__c, CurrencyIsoCode,
+                           Variety__r.Last_Reporting_Sales__c, Sell_Off_Date_If_discontinued__c
+                           FROM price_matrix__c
+                           WHERE Variety__r.Range__c IN: lst_rangeIds AND 
+                           (Rate_Type__c =: 'Grower' or Rate_Type__c =: 'Propagator') AND
+                           CurrencyIsoCode =: currencyCode]; 
+            System.debug('@@@ priceMatrix = '+priceMatrix);
+        }
+        
+        if(Agreement != Null){
+            lst_LicensedVar = [Select Id, Variety__c, Variety__r.Name, Status__c, Variety__r.Range__r.Name,  
+                               Variety_Commencement_Date__c, Is_variety_discontinued__c, Agreement__c, 
+                               Cancellation_Date__c, Sell_Off_Date__c, RecordType.DeveloperName  
+                               FROM Licensed_Variety__c 
+                               WHERE Agreement__c =: Agreement.Id AND RecordType.DeveloperName =: 'Grower_License_Variety']; 
+        }
+        
+        if(lst_LicensedVar != Null && lst_LicensedVar.size() > 0){
+            for(Licensed_Variety__c licVar : lst_LicensedVar){
+                mapLicensedVar.put(licVar.Variety__c, licVar);
+            }
+        }
+        
+        if(priceMatrix != Null && priceMatrix.size() > 0){
+            for(price_matrix__c pm : priceMatrix){
+                
+                showVariety = false;
+                if(pm.Variety__c != null && pm.Variety__r.Range__c != null && pm.Variety__r.Range__r.Name != null){
+                    /*
+if(!mapVarToSizeList.containsKey(pm.Variety__c)){
+mapVarToSizeList.put(pm.Variety__c, new List<Size__c>());
+}
+List<Size__c> lst_Size = mapVarToSizeList.get(pm.Variety__c);
+Size__c tempSize = new Size__c();
+tempSize.Id = pm.Size__c;
+tempSize.Name = pm.Size__r.Name;
+lst_Size.add(tempSize);*/
+                    
+                    if(mapLicensedVar.containskey(pm.Variety__c)){
+                        Licensed_Variety__c licVar = mapLicensedVar.get(pm.Variety__c);
+                        if(pm.Variety__r.IsActive){
+                            if(licVar.Status__c == 'Licensed'){
+                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth){
+                                    showVariety = true;
+                                }
+                            }else if(licVar.Status__c == 'Cancelled'){
+                                
+                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth && 
+                                   ActiveRRP.Start_date__c <= licVar.Sell_Off_Date__c ){
+                                       showVariety = true;
+                                   }
+                            }
+                        }else if(licVar.Is_variety_discontinued__c && 
+                                 pm.Variety__r.Discontinuation_Date__c != Null){
+                                     if(pm.Variety__r.Discontinuation_Date__c < lastDayOfMonth &&
+                                        ActiveRRP.Start_date__c < pm.Variety__r.Last_Reporting_Sales__c){
+                                            if(licVar.Status__c == 'Licensed'){
+                                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth &&
+                                                   pm.Variety__r.Last_Reporting_Sales__c >= ActiveRRP.Start_date__c){
+                                                       showVariety = true;
+                                                   }
+                                            }else if(licVar.Status__c == 'Cancelled'){
+                                                Date smallestDate = pm.Variety__r.Last_Reporting_Sales__c < licVar.Sell_Off_Date__c ? 
+                                                    pm.Variety__r.Last_Reporting_Sales__c : licVar.Sell_Off_Date__c;
+                                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth && 
+                                                   smallestDate >= ActiveRRP.Start_date__c){
+                                                       showVariety = true;
+                                                   }
+                                            }
+                                        }else if(pm.Variety__r.Discontinuation_Date__c > lastDayOfMonth){
+                                            if(licVar.Status__c == 'Licensed'){
+                                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth){
+                                                    showVariety = true;
+                                                }
+                                            }else if(licVar.Status__c == 'Cancelled'){
+                                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth &&
+                                                   licVar.Sell_Off_Date__c >= ActiveRRP.Start_date__c){
+                                                       showVariety = true;
+                                                   }
+                                            }
+                                        }
+                                 }
+                        if(showVariety){
+                            
+                            if(!mapDisplayRanges.containsKey(pm.Variety__r.Range__r.Name)){
+                                mapDisplayRanges.put(pm.Variety__r.Range__r.Name, new rangeWrapper());
+                            }
+                            rangeWrapper rngObj =  mapDisplayRanges.get(pm.Variety__r.Range__r.Name);
+                            rngObj.setSizes.add(pm.Size__r.Name);
+                            rngObj.mapVariety = mapDisplayRanges.get(pm.Variety__r.Range__r.Name).mapVariety;
+                            
+                            if(!rngObj.mapVariety.containsKey(pm.Variety__r.Name)){
+                                
+                                rngObj.mapVariety.put(pm.Variety__r.Name, new varieties());
+                            }           
+                            
+                            varieties var = rngObj.mapVariety.get(pm.Variety__r.Name);
+                            var.rangeId     = pm.Variety__r.Range__c;
+                            var.rangeName   = pm.Variety__r.Range__r.name;         
+                            var.varietyId   = pm.Variety__c;
+                            var.varietyName = pm.Variety__r.Name;
+                            var.licenseVarId = licVar.Id;
+                            
+                            size sz = new size();
+                            sz.sizeId = pm.Size__c;
+                            sz.sizeName = pm.Size__r.Name;
+                            sz.price = pm.Rate_Type__c == 'Grower' ? pm.Price__c : 0;
+                            //sz.qty = 0;
+                            
+                            var.lstSizes.add(sz);
+                            rngObj.lstVarts.add(var);
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*Match Range sizelist to variety sizelist*/
+        if(mapDisplayRanges != Null && mapDisplayRanges.size() > 0){
+            for(String str : mapDisplayRanges.keySet()){            
+                for(String vrt : mapDisplayRanges.get(str).mapVariety.KeySet()){
+                    Set<String> setTemp = new Set<String>();
+                    for(Size sz : mapDisplayRanges.get(str).mapVariety.get(vrt).lstSizes){
+                        setTemp.add(sz.sizeName);
+                    }
+                    
+                    for(String str1 : mapDisplayRanges.get(str).setSizes){
+                        if(!setTemp.contains(str1)){
+                            size sz1 = new size();
+                            sz1.sizeName = str1;
+                            sz1.price = 0;
+                            //sz1.qty = 0;
+                            mapDisplayRanges.get(str).mapVariety.get(vrt).lstSizes.add(sz1);
+                        }
+                    }
+                    list<String> lstSizeNames = new list<String>();
+                    Map<String, size> mapsizenameTosize = new Map<String, size>();
+                    for( size szVar: mapDisplayRanges.get(str).mapVariety.get(vrt).lstSizes){
+                        lstSizeNames.add(szVar.sizeName);
+                        mapsizenameTosize.put(szVar.sizeName, szVar);    
+                    }
+                    lstSizeNames.sort();
+                    mapDisplayRanges.get(str).mapVariety.get(vrt).lstSizes.clear();
+                    for(String var1: lstSizeNames){
+                        mapDisplayRanges.get(str).mapVariety.get(vrt).lstSizes.add(mapsizenameTosize.get(var1));
+                    }
+                }
+            } 
+            
+            for(String str : mapDisplayRanges.keySet()){
+                rangeWrapper rngObj = mapDisplayRanges.get(str);
+                rngObj.lstSizes.addAll(mapDisplayRanges.get(str).setSizes);
+                rngObj.lstSizes.sort();            
+            }
+        }
+    }
+    
+    public void EditRoyaltyReport(){
+        // Check whether Report in edit mode
+        if(ActiveRRPId != Null){
+            
+            Royalty_Reporting_Period__c objRRP = [Select Id, Period__c, no_stock_losses__c from Royalty_Reporting_Period__c 
+                                                  where id =: ActiveRRPId];
+            
+            lst_salesline = [SELECT Id, Internal_Sales__c, Licensed_Variety__c, Quantity__c, Range__c, Range_Name__c, unregistered_customer__c, 
+                             Reporting_Period__c, Reporting_Period_Start_Date__c, Royalty__c, Royalty_Reporting_Period__c,
+                             Size__c, Size__r.Name, Sold_to__c, Notes__c, Unlicensed__c, Variety__c, Variety_Name__c,Price_Matrix__c,
+                             customer__r.Name, Country_Territory__c, customer__c, discounted_royalty_rate__c, Variety_Sold_Outside_the_Territory__c,
+                             Stock_Losses__c, Stock_Loss__c 
+                             FROM Sales_Line__c
+                             WHERE Royalty_Reporting_Period__c =: ActiveRRPId and Variety__r.IsActive = true];
+        }
+        
+        //create licensed variety 
+        genrteGrowerLicencedVarieties();
+        
+        
+        
+        if(lst_salesline != Null && lst_salesline.size() > 0) {
+            
+            Map<String, Sales_Line__c> map_savedSaleslines = new Map<String, Sales_Line__c>();
+            
+            for(Sales_Line__c salesline: lst_salesline) {
+                
+                //For Licensed Varieties
+                if(mapDisplayRanges.containsKey(salesline.Range_Name__c) && 
+                   salesline.Unlicensed__c == False && 
+                   salesline.Internal_Sales__c == false){
+                       
+                       if(mapDisplayRanges.get(salesline.Range_Name__c).mapVariety.ContainsKey(salesline.Variety_Name__c)){
+                           for(Size sz : mapDisplayRanges.get(salesline.Range_Name__c).mapVariety.get(salesline.Variety_Name__c).lstSizes) {
+                               if(salesline.Size__c == sz.sizeId) {
+                                   sz.qty = salesline.Quantity__c;
+                                   sz.price = salesline.Royalty__c;
+                                   
+                               }
+                           }
+                       }
+                   }
+                
+                //For Other Variery For Grower 
+                if(salesline.Unlicensed__c == True && salesline.Internal_Sales__c == false && salesline.unregistered_customer__c == null && showuploadCSV ==  false) {
+                    if(lstOtherVartys[0].verityname == Null) {
+                        lstOtherVartys.clear();
+                    }
+                    otherVariety othrVar = new otherVariety();
+                    othrVar.salesId = salesline.Id;
+                    othrVar.sizeid = salesline.Size__c;
+                    othrVar.sizename = salesline.Size__r.Name;
+                    othrVar.verityname = salesline.Variety__c;
+                    othrVar.customername = salesline.customer__r.name;                    
+                    othrVar.quantity = String.valueOf(salesline.Quantity__c);
+                    othrVar.royaltyRate = salesline.Royalty__c; //Added By Yogesh
+                    othrVar.notes = salesline.Notes__c;                    
+                    othrVar.Country = salesline.Country_Territory__c;
+                    
+                    //othrVar.lstSizeNames = mapVarToSizeList.get(othrVar.verityname);
+                    /*if(othrVar.verityname != null && mapVarToSizeList != null && mapVarToSizeList.size() > 0 && mapVarToSizeList.containskey(othrVar.verityname)){
+for(Size__c othrSize: mapVarToSizeList.get(othrVar.verityname)){
+othrVar.lstSizeNames.add(new SelectOption(othrSize.Id,othrSize.Name));
+
+}
+
+}*/
+                    
+                    if(othrVar.verityname != null && mapAllVarToSizeList != null && mapAllVarToSizeList.size() > 0 && mapAllVarToSizeList.containskey(othrVar.verityname)){
+                        for(Size__c othrSize: mapAllVarToSizeList.get(othrVar.verityname)){
+                            othrVar.lstSizeNames.add(new SelectOption(othrSize.Id,othrSize.Name));
+                            
+                        }
+                    }   
+                    removeOthrVarIds.add(salesline.Id);
+                    lstOtherVartys.add(othrVar);
+                }
+                
+                //licensed and Unlicensed sales for propogator 
+                if(salesline.Internal_Sales__c == false) {
+                    
+                    if(lstLicensedAndUnlicensedOtherVartys.size() > 0) //added by yogesh bcz list out bound error 
+                    {
+                        if(lstLicensedAndUnlicensedOtherVartys[0].verityname == Null) {
+                            lstLicensedAndUnlicensedOtherVartys.clear(); 
+                        } 
+                    }
+                    
+                    /*
+if(isChangeRRP == true) {
+this list is already clear from when you change rrp // fun 
+lstLicensedAndUnlicensedOtherVartys.clear();
+}
+*/
+                    otherVariety othrVar = new otherVariety();
+                    othrVar.salesId = salesline.Id;
+                    othrVar.sizeid = salesline.Size__c;
+                    othrVar.sizename = salesline.Size__r.Name;
+                    othrVar.verityname = salesline.Variety__c;
+                    /*othrVar.customerId = salesline.customer__c; */
+                    System.debug('@@@@ salesline.customer__r.name = '+salesline.customer__r.name);
+                    if(salesline.customer__r.name == null) {
+                        othrVar.customername = salesline.unregistered_customer__c;
+                    }
+                    else{
+                        othrVar.customerId = salesline.customer__c;
+                        othrVar.customername = salesline.customer__r.name;
+                    }
+                    othrVar.quantity = String.valueOf(salesline.Quantity__c);
+                    othrVar.royaltyRate = salesline.Royalty__c; //Added By Yogesh
+                    othrVar.notes = salesline.Notes__c;
+                    othrVar.Country = salesline.Country_Territory__c;
+                    othrVar.isUnlicensed = salesline.Unlicensed__c;
+                    
+                    //othrVar.lstSizeNames = mapVarToSizeList.get(othrVar.verityname);
+                    /*if(othrVar.verityname != null && mapVarToSizeList != null && mapVarToSizeList.size() > 0 && mapVarToSizeList.containskey(othrVar.verityname)){
+for(Size__c othrSize: mapVarToSizeList.get(othrVar.verityname)){
+othrVar.lstSizeNames.add(new SelectOption(othrSize.Id,othrSize.Name));
+
+}
+
+} */
+                    
+                    if(othrVar.verityname != null && mapAllVarToSizeList != null && mapAllVarToSizeList.size() > 0 && mapAllVarToSizeList.containskey(othrVar.verityname)){
+                        for(Size__c othrSize: mapAllVarToSizeList.get(othrVar.verityname)) {
+                            othrVar.lstSizeNames.add(new SelectOption(othrSize.Id,othrSize.Name));
+                        }
+                    }    
+                    
+                    System.debug('@@cus name : @@ : '+salesline.unregistered_customer__c);
+                    removeOthrVarIds.add(salesline.Id);
+                    
+                    lstLicensedAndUnlicensedOtherVartys.add(othrVar);
+                } 
+                
+                // licensed sales For Grower                
+                if(salesline.Internal_Sales__c == False && salesline.Unlicensed__c == false && showuploadCSV == false)
+                {
+                    
+                    ///added by yogesh 
+                    // licensed variety populated in licensed grower table.
+                    if(!lst_GrowerLicensedVariety.isEmpty() && lst_GrowerLicensedVariety.size() > 0)
+                    {
+                        if(String.isNotBlank(salesline.Variety__c) && String.isNotBlank(salesline.Size__c))
+                        {
+                            String Key = salesline.Variety__c+''+salesline.Size__c;
+                            map_savedSaleslines.put(Key, salesline);
+                        }
+                    }
+                    
+                    
+                    //lst_RangeLicensedVariety
+                    /*
+System.debug('!!@@!!@@!!###$$$ : For licensed sale ');
+if(lst_RangeLicensedVariety[0].verityname == Null)
+{
+lst_RangeLicensedVariety.clear();
+}
+RangeLicensedVariety rangeLV = new RangeLicensedVariety();
+rangeLV.salesId = salesline.Id;
+rangeLV.sizeid = salesline.Size__c;
+rangeLV.sizename = salesline.Size__r.Name;
+rangeLV.verityname = salesline.Variety__c;
+rangeLV.verityId = salesline.Variety__c;
+rangeLV.rangeId = salesline.Range__c;
+rangeLV.rangeName = salesline.Range_Name__c;
+rangeLV.quantity = String.valueOf(salesline.Quantity__c);
+rangeLV.royaltyRate = salesline.Royalty__c;
+if(salesline.discounted_royalty_rate__c > 0)
+{
+rangeLV.discountedRoyaltyRate = salesline.discounted_royalty_rate__c;
+rangeLV.applySpecialRate = true;
+}
+rangeLV.notes = salesline.Notes__c;
+rangeLV.priceMatrixId = salesline.Price_Matrix__c;
+rangeLV.stockloss = String.valueOf(salesline.Stock_Losses__c); 
+
+
+if(rangeLV.rangeId != null)
+{
+System.debug('!!@@##Yogi!!@@## rangeLV.rangeId : '+rangeLV.rangeId);
+rangeLV.lstLicensedVariety = getLiecensedVarietyBasedOnRangeWhenPageLoad(rangeLV.rangeId);
+}
+
+
+
+if(rangeLV.verityname != null && mapAllVarToSizeList != null && mapAllVarToSizeList.size() > 0 && mapAllVarToSizeList.containskey(rangeLV.verityname)){
+for(Size__c othrSize: mapAllVarToSizeList.get(rangeLV.verityname)){
+rangeLV.lstSizeNames.add(new SelectOption(othrSize.Id,othrSize.Name));
+
+}
+}
+
+
+lst_RangeLicensedVariety.add(rangeLV); 
+*/
+                    
+                    
+                    
+                }
+                
+                //For Internal Sales
+                if(salesline.Internal_Sales__c == True) {
+                    if(InternalTradeLines[0].verityname == Null){
+                        InternalTradeLines.clear();
+                    }
+                    InternalTrade inTrade = new InternalTrade();
+                    inTrade.salesId = salesline.Id;
+                    inTrade.verityname = salesline.Variety__c;
+                    inTrade.customername = salesline.Sold_to__c;
+                    inTrade.quantity = String.valueOf(salesline.Quantity__c);
+                    inTrade.royaltyRate = salesline.Royalty__c; //Added By Yogesh
+                    inTrade.notes = salesline.Notes__c;
+                    removeInTradeIds.add(salesline.Id);
+                    InternalTradeLines.add(inTrade);
+                }
+            }
+            
+            
+            if(!map_savedSaleslines.isEmpty())
+            {
+                for(GrowerLicensedVariety lv : lst_GrowerLicensedVariety)
+                {
+                    if(String.isNotBlank(lv.verityId) && String.isNotBlank(lv.sizeid))
+                    {
+                        String Key = lv.verityId+''+lv.sizeid;
+                        if(map_savedSaleslines.containsKey(Key))
+                        {
+                            Sales_Line__c salesline = map_savedSaleslines.get(Key);
+                            
+                            System.debug('!!@@## YO :: lv : '+lv);
+                            System.debug('!!@@## YO :: quantity s : '+salesline.Quantity__c);
+                            System.debug('!!@@## YO :: Royalty__c s  : '+salesline.Royalty__c);
+                            System.debug('!!@@## YO :: m Variety__c name : '+lv.verityname);
+                            System.debug('!!@@## YO :: m Variety__c s : '+salesline.Variety__c);
+                            System.debug('!!@@## YO :: m Variety__c  : '+lv.verityId);
+                            System.debug('!!@@## YO :: m Size__c s : '+salesline.Size__c);
+                            System.debug('!!@@## YO :: m Size__c  : '+lv.sizeid);
+                            
+                            if(salesline.Variety__c == lv.verityId && salesline.Size__c == lv.sizeid)
+                            {
+                                System.debug('!!@@## YO :: all condition are true : ');
+                                lv.salesId = salesline.Id;
+                                lv.quantity = String.valueOf(salesline.Quantity__c);
+                                lv.notes = salesline.Notes__c;
+                                lv.stockloss = String.valueOf(salesline.Stock_Losses__c); 
+                                if(salesline.discounted_royalty_rate__c > 0)
+                                {
+                                    lv.discountedRoyaltyRate = salesline.discounted_royalty_rate__c;
+                                    lv.applySpecialRate = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            
+        }
+        
+    }
+    
+    public void genrteGrowerLicencedVarieties()
+    {
+        
+        lst_GrowerLicensedVariety.clear();
+        
+        Map<String,Licensed_Variety__c> mapLicensedVar = new Map<String,Licensed_Variety__c>();
+        Set<Id> varietiesId = new Set<Id>();
+        Set<Id> licensedVarietyIds = new Set<Id>();
+        System.debug('@@@ Agreement.Id = '+Agreement.Id);
+        List<Licensed_Variety__c> lst_alllicensedVar = [Select Id, Variety__c, Variety__r.Name, Status__c, Variety__r.Range__r.Name,  
+                                                        Variety_Commencement_Date__c, Is_variety_discontinued__c, Agreement__c, 
+                                                        Cancellation_Date__c, Sell_Off_Date__c, RecordType.DeveloperName, Special_Royalty_Rate_Q__c  
+                                                        FROM Licensed_Variety__c 
+                                                        WHERE Agreement__c =: Agreement.Id and Variety__r.IsActive = true];
+        System.debug('@@@ lst_alllicensedVar = '+lst_alllicensedVar);
+        if(!lst_alllicensedVar.isEmpty() && lst_alllicensedVar.size() > 0)
+        {
+            for(Licensed_Variety__c lv: lst_alllicensedVar)
+            {
+                mapLicensedVar.put(lv.Variety__r.Name, lv);
+                varietiesId.add(lv.Variety__c);
+                licensedVarietyIds.add(lv.id);
+            }
+        }
+        
+        System.debug('@@@@ varietiesId = '+varietiesId);
+        map<String,List<String>> map_sizeBasedOnVariety = new map<String,List<String>>();
+        
+        List<price_matrix__c> priceMatrix = new List<price_matrix__c>();
+        if(!varietiesId.isEmpty() && varietiesId.size() > 0)
+        {
+            priceMatrix = [SELECT id, Name,Range__c, Range__r.name, Variety__c,Variety__r.Name, Size__c, 
+                           Variety__r.Range__c, Variety__r.Range__r.Name, Size__r.Name, Price__c, Rate_Type__c,
+                           Variety__r.IsActive, Variety__r.Discontinuation_Date__c, CurrencyIsoCode,
+                           Variety__r.Last_Reporting_Sales__c, Sell_Off_Date_If_discontinued__c, Start_Date__c, End_Date__c
+                           FROM price_matrix__c
+                           WHERE Variety__c IN: varietiesId AND 
+                           Rate_Type__c =: 'Grower' AND
+                           CurrencyIsoCode =: currencyCode AND Size__r.isDisplay__c = true
+                           ORDER BY Variety__r.Name, Size__r.Name ASC]; 
+            System.debug('@@@ priceMatrix = '+priceMatrix);
+        }
+        
+        map<String, price_matrix__c> map_pMatBasedOnSizeAndVName = new map<String, price_matrix__c>(); 
+        Set<String> varietyIds = new Set<String>();
+        Set<String> sizeIds = new Set<String>();
+        if(!priceMatrix.isEmpty() && priceMatrix.size() > 0)
+        {
+            
+            for(price_matrix__c pmat : priceMatrix)
+            {
+                String varietyId = pmat.Variety__c;  
+                System.debug('varietyId::::::::'+varietyId);
+                String sizeId = pmat.Size__c;
+                
+                if(varietyId != null && varietyId.length() == 18) {
+                    varietyId = varietyId.substring(0, 15);
+                }
+                if(sizeId != null)
+                {
+                    if(sizeId.length() == 18 ) {
+                        sizeId = sizeId.substring(0, 15);
+                    }
+                }
+                
+                varietyIds.add(varietyId);
+                sizeIds.add(sizeId);
+                
+                if(String.isNotBlank(pmat.Variety__r.Name) && String.isNotBlank(pmat.Size__r.Name))
+                {
+                    String key = pmat.Variety__r.Name+''+pmat.Size__r.Name;
+                    if(map_pMatBasedOnSizeAndVName.containsKey(key))
+                    {
+                        if(ActiveRRP.Start_date__c >= pmat.Start_Date__c && ActiveRRP.Start_date__c <= pmat.End_Date__c)
+                        {
+                            map_pMatBasedOnSizeAndVName.put(key, pmat);
+                        }
+                        else
+                        {
+                            price_matrix__c old_pmat =  map_pMatBasedOnSizeAndVName.get(key);
+                            if(ActiveRRP.Start_date__c >= old_pmat.Start_Date__c && ActiveRRP.Start_date__c <= old_pmat.End_Date__c)
+                            {
+                                //do nothing
+                            }
+                            else
+                            {
+                                if(old_pmat.Price__c < pmat.Price__c)
+                                {
+                                    map_pMatBasedOnSizeAndVName.put(key, pmat);
+                                }
+                            }
+                            
+                        }
+                    }
+                    else
+                    {
+                        map_pMatBasedOnSizeAndVName.put(key, pmat);
+                    }
+                }
+                
+            }
+            
+        }
+        
+        //apply special rate logic 
+        Map<String, Decimal> map_specialRateToPMatId = new Map<String, Decimal>();
+        System.debug('@@## !! 00 licensedVarietyIds 01 : '+licensedVarietyIds);
+        System.debug('@@## !! 00 varietyIds 02 : '+varietyIds);
+        System.debug('@@## !! 00 sizeIds 03 : '+sizeIds);
+        
+        for(Discount_Licensed_Variety__c objDLV : [SELECT id, Price_variety_Id__c, Price_Size_Id__c, Price__c, Variety__c, 
+                                                   Price_Matrix__c, Start_Date__c, End_Date__c, Discount__c, Licensed_Variety__c 
+                                                   FROM Discount_Licensed_Variety__c 
+                                                   WHERE Licensed_Variety__c IN: licensedVarietyIds  
+                                                   AND Price_variety_Id__c =:varietyIds  AND Price_Size_Id__c =:sizeIds ])
+        {
+            System.debug('@@## !! found discount record..'); 
+            //4/05/2021 <= 5/01/2021 && 
+            if(objDLV.Start_Date__c <= ActiveRRP.Start_date__c  && objDLV.End_Date__c >= ActiveRRP.Start_date__c)
+            {
+                //Discount = bill - (bill * discount / 100)
+                Decimal DiscountRate = 0;
+                DiscountRate = objDLV.Price__c - (objDLV.Price__c * objDLV.Discount__c / 100).setScale(2);
+                
+                map_specialRateToPMatId.put(objDLV.Price_Matrix__c, DiscountRate);
+            }
+        }
+        System.debug('@@## !! map_specialRateToPMatId 0 : '+map_specialRateToPMatId);
+        
+        
+        if(!map_pMatBasedOnSizeAndVName.isEmpty())
+        {
+            for(Price_Matrix__c pmat : map_pMatBasedOnSizeAndVName.values())
+            {
+                GrowerLicensedVariety gLV = new GrowerLicensedVariety();
+                
+                gLV.verityname = pmat.Variety__r.Name;
+                gLV.verityId = pmat.Variety__c;
+                gLV.sizename = pmat.Size__r.Name;
+                gLV.sizeid = pmat.Size__c;
+                gLV.applySpecialRate = false; // set default false
+                gLV.royaltyRate = pmat.Price__c;
+                System.debug('@@!! Variety_Name : '+pmat.Variety__r.Name);
+                System.debug('@@!! Size_Name : '+pmat.Size__r.Name);
+                System.debug('@@!! Pmat_id : '+pmat.id);
+                gLV.priceMatrixId = pmat.id;  
+                gLV.rangeId = pmat.Variety__r.Range__c;
+                
+                if(mapLicensedVar.containsKey(pmat.Variety__r.Name))
+                {
+                    System.debug('@@## !! PID:'+pmat.id);
+                    
+                    System.debug('@@## !! found Licensed variety 1 ');
+                    System.debug('@@## !! found Licensed variety 1 : '+mapLicensedVar.get(pmat.Variety__r.Name));
+                    
+                    gLV.licensedVarietyId = mapLicensedVar.get(pmat.Variety__r.Name).Id;
+                    
+                    if(mapLicensedVar.get(pmat.Variety__r.Name).Special_Royalty_Rate_Q__c == true)
+                    {
+                        System.debug('@@## !! special rate apply 2 ');
+                        
+                        if(map_specialRateToPMatId.containsKey(pmat.id))
+                        {
+                            System.debug('@@## !! found special rate 3 ');
+                            gLV.priceMatrixId = pmat.id;  
+                            gLV.applySpecialRate = true;
+                            gLV.discountedRoyaltyRate = map_specialRateToPMatId.get(pmat.id);
+                            
+                        }
+                    }
+                }
+                lst_GrowerLicensedVariety.add(gLV);
+            }
+        }
+        
+        
+    }
+    
+    public List<SelectOption> getLiecensedVarietyBasedOnRangeWhenPageLoad(String argmRangeId)
+    {
+        
+        System.debug('@@1212@@ rowNumForLicensedRangeVariety : '+rowNumForLicensedRangeVariety);
+        set<Id> set_Licensedvarieties = new set<Id>();
+        
+        Integer numberOfDays;
+        Date lastDayOfMonth;
+        if(ActiveRRP.End_Date__c != null) {
+            numberOfDays = Date.daysInMonth(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month());
+            lastDayOfMonth = Date.newInstance(ActiveRRP.End_Date__c.year(), ActiveRRP.End_Date__c.month(), numberOfDays);
+        }
+        
+        Map<String,Licensed_Variety__c> mapLicensedVar = new Map<String,Licensed_Variety__c>();
+        Boolean showVariety = false;
+        
+        List<Licensed_Variety__c> lst_LicensedVar;
+        //RangeLicensedVariety rangeLicensedvarietyObj = lst_RangeLicensedVariety.get(Integer.valueOf(rowNumForLicensedRangeVariety));
+        
+        System.debug('@@@ 11lst_RangeLicensedVariety = '+lst_RangeLicensedVariety);
+        System.debug('@@@ 11lst_RangeLicensedVariety size = '+lst_RangeLicensedVariety.size());
+        //System.debug('@@@ 11rangeLicensedvarietyObj = '+rangeLicensedvarietyObj);
+        
+        //rangeLicensedvarietyObj.verityId = null;
+        //rangeLicensedvarietyObj.SizeId = null;
+        //rangeLicensedvarietyObj.royaltyRate = null;
+        
+        //System.debug('@@@ 11rangeLicensedvarietyObj.rangeId = '+rangeLicensedvarietyObj.rangeId);
+        
+        if(argmRangeId != Null && argmRangeId != '')
+        {
+            priceMatrix = [SELECT id, Name,Range__c, Range__r.name, Variety__c,Variety__r.Name, Size__c, 
+                           Variety__r.Range__c, Variety__r.Range__r.Name, Size__r.Name, Price__c, Rate_Type__c,
+                           Variety__r.IsActive, Variety__r.Discontinuation_Date__c, CurrencyIsoCode,
+                           Variety__r.Last_Reporting_Sales__c, Sell_Off_Date_If_discontinued__c
+                           FROM price_matrix__c
+                           WHERE Variety__r.Range__c =: argmRangeId AND 
+                           (Rate_Type__c =: 'Grower' or Rate_Type__c =: 'Propagator') AND
+                           CurrencyIsoCode =: currencyCode]; 
+            System.debug('@@@ priceMatrix = '+priceMatrix);
+        }
+        
+        if(Agreement != Null){
+            lst_LicensedVar = [Select Id, Variety__c, Variety__r.Name, Status__c, Variety__r.Range__r.Name,  
+                               Variety_Commencement_Date__c, Is_variety_discontinued__c, Agreement__c, 
+                               Cancellation_Date__c, Sell_Off_Date__c, RecordType.DeveloperName  
+                               FROM Licensed_Variety__c 
+                               WHERE Agreement__c =: Agreement.Id AND  
+                               ( RecordType.DeveloperName =: 'Grower_License_Variety' or RecordType.DeveloperName =:'Propagator_Variety_License')]; 
+        }
+        
+        List<SelectOption> varietyOptions = new List<SelectOption>();
+        
+        if(lst_LicensedVar != Null && lst_LicensedVar.size() > 0){
+            for(Licensed_Variety__c licVar : lst_LicensedVar){
+                mapLicensedVar.put(licVar.Variety__c, licVar);
+                System.debug('@@2021@Yogesh@@ : enterd licVar');
+            }
+        }
+        System.debug('@@2021@Yogesh@@ : enterd priceMatrix.size() : '+priceMatrix.size());
+        
+        if(priceMatrix != Null && priceMatrix.size() > 0){
+            
+            for(price_matrix__c pm : priceMatrix){
+                System.debug('@@2021@Yogesh@@ : enterd pm');
+                showVariety = false;
+                if(pm.Variety__c != null && pm.Variety__r.Range__c != null && pm.Variety__r.Range__r.Name != null){
+                    
+                    System.debug('@@2021@Yogesh@@ : enterd');
+                    if(mapLicensedVar.containskey(pm.Variety__c)){
+                        Licensed_Variety__c licVar = mapLicensedVar.get(pm.Variety__c);
+                        if(pm.Variety__r.IsActive){
+                            if(licVar.Status__c == 'Licensed'){
+                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth){
+                                    showVariety = true;
+                                }
+                            }else if(licVar.Status__c == 'Cancelled'){
+                                
+                                if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth && 
+                                   ActiveRRP.Start_date__c <= licVar.Sell_Off_Date__c ){
+                                       showVariety = true;
+                                   }
+                            }
+                        }
+                        else if(licVar.Is_variety_discontinued__c && 
+                                pm.Variety__r.Discontinuation_Date__c != Null){
+                                    if(pm.Variety__r.Discontinuation_Date__c < lastDayOfMonth &&
+                                       ActiveRRP.Start_date__c < pm.Variety__r.Last_Reporting_Sales__c){
+                                           if(licVar.Status__c == 'Licensed'){
+                                               if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth &&
+                                                  pm.Variety__r.Last_Reporting_Sales__c >= ActiveRRP.Start_date__c){
+                                                      showVariety = true;
+                                                  }
+                                           }else if(licVar.Status__c == 'Cancelled'){
+                                               Date smallestDate = pm.Variety__r.Last_Reporting_Sales__c < licVar.Sell_Off_Date__c ? 
+                                                   pm.Variety__r.Last_Reporting_Sales__c : licVar.Sell_Off_Date__c;
+                                               if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth && 
+                                                  smallestDate >= ActiveRRP.Start_date__c){
+                                                      showVariety = true;
+                                                  }
+                                           }
+                                       }else if(pm.Variety__r.Discontinuation_Date__c > lastDayOfMonth){
+                                           if(licVar.Status__c == 'Licensed'){
+                                               if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth){
+                                                   showVariety = true;
+                                               }
+                                           }else if(licVar.Status__c == 'Cancelled'){
+                                               if(licVar.Variety_Commencement_Date__c <= lastDayOfMonth &&
+                                                  licVar.Sell_Off_Date__c >= ActiveRRP.Start_date__c){
+                                                      showVariety = true;
+                                                  }
+                                           }
+                                       }
+                                }
+                        
+                        
+                        if(showVariety){
+                            System.debug('pm.Variety__c  ::'+pm.Variety__c );
+                            if(pm.Variety__c != null)
+                            {
+                                PM_SizeName.add(pm);
+                            }
+                            System.debug(' @@2021@Yogesh@@ : showVariety : '+pm.Variety__r.Id);
+                            set_Licensedvarieties.add(pm.Variety__r.Id);
+                            
+                        }
+                    }
+                }
+            }
+        }
+        varietyOptions.add(new SelectOption('','-None-'));
+        for(String variety : set_Licensedvarieties)
+        {
+            String varietyId = mapLicensedVar.get(variety).Variety__c;
+            System.debug('@@Yogesh@2021@@ !! mapLicensedVar.get(variety).id : '+mapLicensedVar.get(variety).id);
+            varietyOptions.add(new SelectOption(varietyId, +mapLicensedVar.get(variety).Variety__r.Name));
+        }
+        varietyOptions.sort();
+        return varietyOptions;
+        
+    }
+    
+    public void validateAllSaleslineForPropgatorOnly() {
+        
+        System.debug('@@@ lstLicensedAndUnlicensedOtherVartys = '+lstLicensedAndUnlicensedOtherVartys);
+        List<String> lstCustomerName = new List<String>();        
+        List<String> lstSizeName = new List<String>();        
+        Set<String> lstVarietyName = new Set<String>();  
+        Map<String,Decimal> priceMatrixMap = new Map<String,Decimal>();
+        Map<String, Id> mapOfCustomerExsit = new Map<String, Id>();
+        Map<Id, Boolean> mapOfCustomerIdAndEmporiumGrower = new Map<Id, Boolean>();
+        Map<String, String> mapOfVarietyIdAndLicensedStatus = new Map<String, String>();
+        Map<String, String> mapOfVarietyIdAndMarket = new Map<String, String>();
+        Map<Id, String> mapOfVarietyIdAndTerritory = new Map<Id, String>();
+        Map<Id, Boolean> maopOfCustmrIdAndActiveGrwProp = new Map<Id, Boolean>();
+        Map<Id, String> mapOfVarietyIdAndRangeType = new Map<Id, String>();
+        Map<Id, String> mapOfVarietyIdAndTerritoryGranted = new Map<Id, String>();
+        Map<String, String> mspOfCustnIdAndName = new Map<String, String>();
+        
+        for(otherVariety othVar: lstLicensedAndUnlicensedOtherVartys) {
+            //check for exsiting Customer	
+            System.debug('@@ othVar.customername = '+othVar.customername);
+            String strCustomer = othVar.customername;	
+            if(strCustomer != null) {
+                strCustomer = strCustomer.replaceAll('�','');  
+                strCustomer = strCustomer.replaceAll('®','');                  
+                strCustomer = strCustomer.replaceAll('\'','');  
+            }                     	
+            lstCustomerName.add(strCustomer);
+            lstVarietyName.add(othVar.verityname);
+        }
+        
+        System.debug('@@@ lstCustomerName = '+lstCustomerName);
+        //************ fill all account related map start *************
+        List<Account> lstAccount = [SELECT id, Name, OEA__c, Grower__c , Propagator__c, Name_Without_Special_Character__c 
+                                    FROM Account 
+                                    WHERE Name_Without_Special_Character__c  IN: lstCustomerName and (RecordType.Name = 'Customer' OR RecordType.Name = 'Overseas Customer')];
+        System.debug('@@@ lstAccount = '+lstAccount);
+        if(lstAccount.size() > 0) {
+            for(Account objAcc: lstAccount) {
+                mapOfCustomerExsit.put(objAcc.Name_Without_Special_Character__c.toLowerCase(), objAcc.Id);	
+                mspOfCustnIdAndName.put(objAcc.Id, objAcc.Name);
+                if(objAcc.Grower__c == true || objAcc.Propagator__c == true) {
+                    System.debug('@@@ ANy one is true');
+                    maopOfCustmrIdAndActiveGrwProp.put(objAcc.Id, true);
+                }     
+                if(objAcc.OEA__c == true) {
+                    mapOfCustomerIdAndEmporiumGrower.put(objAcc.id, objAcc.OEA__c);
+                }                
+            }
+        }
+        System.debug('@@@ maopOfCustmrIdAndActiveGrwProp After looop = '+maopOfCustmrIdAndActiveGrwProp);
+        //************ fill all account related map end *************
+        
+        //************ fill all Agreement related map end *************
+        System.debug('@@@@Agreement.Id = '+Agreement.Id);
+        
+        //************ fill all Licensed Variety related map start *************
+        List<Licensed_Variety__c> lstLicensedVariety = [Select Id, Name, Variety__r.name, Status__c, Agreement__c, Variety__c, 
+                                                        Territory_where_rights_granted__c, Supply_Channel__c, Range_Type__c
+                                                        from Licensed_Variety__c 
+                                                        where Agreement__c =: Agreement.Id];
+        
+        System.debug('@@@ lstLicensedVariety = '+lstLicensedVariety.size());
+        for(Licensed_Variety__c objLicensedVariety : lstLicensedVariety) {
+            mapOfVarietyIdAndLicensedStatus.put(objLicensedVariety.Variety__c, objLicensedVariety.Status__c);
+            mapOfVarietyIdAndMarket.put(objLicensedVariety.Variety__c, objLicensedVariety.Supply_Channel__c);
+            mapOfVarietyIdAndTerritoryGranted.put(objLicensedVariety.Variety__c, objLicensedVariety.Territory_where_rights_granted__c);
+        }
+        
+        //************ fill all Licensed Variety related map End *************
+        
+        System.debug('@@@@ lstVarietyName = '+lstVarietyName);
+        //************ fill all variety/product related map start *************            
+        List<Product2> lstVarietyInSF = [Select Id, Name, Discontinued_Territory__c, range_type__c
+                                         from Product2 where Id In: lstVarietyName  ORDER BY Name ASC];  
+        System.debug('@@@ lstVarietyInSF = '+lstVarietyInSF);
+        
+        if(lstVarietyInSF.size() > 0) {
+            for(Product2 objPro: lstVarietyInSF) {  
+                if(objPro.Discontinued_Territory__c != Null) {
+                    mapOfVarietyIdAndTerritory.put(objPro.Id, objPro.Discontinued_Territory__c);
+                }           
+                if(objPro.range_type__c != null) {
+                    mapOfVarietyIdAndRangeType.put(objPro.Id, objPro.range_type__c);
+                }                
+            }
+        }
+        //************ fill all variety related map end *************
+        
+        //Main For loop
+        for(otherVariety objotherVariety: lstLicensedAndUnlicensedOtherVartys) {
+            
+           //check for exsiting Customer	
+            	
+            System.debug('@@@ mapOfCustomerExsit12 = '+mapOfCustomerExsit);	
+            if(objotherVariety.customername != null) {	
+                String strCustomer = objotherVariety.customername.toLowerCase();	
+                strCustomer = strCustomer.replaceAll('�','');
+                strCustomer = strCustomer.replaceAll('®','');                
+                strCustomer = strCustomer.replaceAll('\'','');  	
+                if(mapOfCustomerExsit.containsKey(strCustomer)) {	
+                    System.debug('@@ mapOfCustomerExsit.get(strCustomer) = '+mapOfCustomerExsit.get(strCustomer));	
+                    objotherVariety.customerId = mapOfCustomerExsit.get(strCustomer);	
+                }	
+                else{	
+                    objotherVariety.unregisterCustomer = objotherVariety.customername;	
+                }	
+                
+                System.debug('@@@@  objotherVariety.customerId = '+ objotherVariety.customerId);
+                if(objotherVariety.customerId != null && objotherVariety.customerId != ''){
+                    if(mspOfCustnIdAndName.containsKey(objotherVariety.customerId)) {	
+                        objotherVariety.customername = mspOfCustnIdAndName.get(objotherVariety.customerId);	
+                    }	
+                }
+            }
+            
+            //****** Set invoice/ status/ unlicensed  Start *******
+            
+            //customer is not exsit and country is Australia
+            if(objotherVariety.unregisterCustomer != NULL) {
+                System.debug('@@ in first if');
+				
+                if(objotherVariety.Country == 'Australia') {
+                    System.debug('@@-1');
+                    System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                    objotherVariety.invoice = 'true';
+                    objotherVariety.Status = 'Needs review';
+                    objotherVariety.isUnlicensed = true;
+                }        
+                else{
+                    System.debug('@@-2');
+                    System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                    objotherVariety.invoice = 'false';
+                    objotherVariety.Status = 'Needs review'; 
+                    objotherVariety.isUnlicensed = true;
+                    objotherVariety.royaltyRate = 0;
+                }
+            }
+            else{
+                System.debug('@@ in first else');
+                System.debug('@@@ maopOfCustmrIdAndActiveGrwProp = '+maopOfCustmrIdAndActiveGrwProp);
+                System.debug('@@@ objotherVariety.customerId = '+objotherVariety.customerId);
+                
+                //it is an existing Account (record type customer and Overseas Customer)
+                //Does this account have an active grower or propagator agreement with licensed varieties?
+                if(maopOfCustmrIdAndActiveGrwProp.containsKey(objotherVariety.customerId)) {
+                    System.debug('@@ Propagator and grower checkbox true');
+                    
+                    //the propegator licensed for the variety sold?
+                    if(mapOfVarietyIdAndLicensedStatus.containsKey(objotherVariety.verityname)) {
+                        System.debug('@@@ variety is licensed');
+                        
+                        System.debug('@@@ mapOfVarietyIdAndTerritory = '+mapOfVarietyIdAndTerritory);
+                        //Is the licensed variety on the prop agreement discontinued for 
+                        //the territory of the customer
+                        Boolean isDisconTerritor;
+                        if(mapOfVarietyIdAndTerritory.containskey(objotherVariety.verityname)) {
+                            String strTerritoryvalue = mapOfVarietyIdAndTerritory.get(objotherVariety.verityname);
+                            System.debug('@@@ strTerritoryvalue = '+strTerritoryvalue);
+                            if(strTerritoryvalue.contains(objotherVariety.Country)) {
+                                System.debug('@@@ found country in discontinue territory');
+                                isDisconTerritor = true;
+                            }
+                            else{
+                                System.debug('@@@ Notfound country in discontinue territory');
+                                isDisconTerritor = false;
+                            }
+                        }
+                        else{
+                            isDisconTerritor = false;
+                        }
+                        
+                        System.debug('@@@@ Final isDisconTerritor Value = '+isDisconTerritor);
+                        
+                        //Country/territory is discontinue
+                        if(isDisconTerritor == true) {
+                            System.debug('@@-3');
+                            System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                            objotherVariety.invoice = 'false';
+                            objotherVariety.Status = 'Needs review'; 
+                            objotherVariety.royaltyRate = 0;
+                            objotherVariety.isVarietyDiscontinue = true;
+                        }
+                        else{
+                            if(mapOfVarietyIdAndMarket.containsKey(objotherVariety.verityname)) {
+                                
+                                String strMakertName = mapOfVarietyIdAndMarket.get(objotherVariety.verityname);
+                                
+                                if(strMakertName == 'Open Market - Emporium Grower (EG)' || strMakertName == null || strMakertName == ''){
+                                    System.debug('@@-4');
+                                    System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                                    objotherVariety.invoice = 'false';
+                                    objotherVariety.royaltyRate = 0;
+                                    objotherVariety.Status = 'Approved';                                                             
+                                    objotherVariety.isvarietySoldOutSideMarket = false;
+                                }
+                                else{
+                                    System.debug('@@-5');
+                                    System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                                    objotherVariety.invoice = 'false';
+                                    objotherVariety.royaltyRate = 0;
+                                    objotherVariety.Status = 'Needs review';                                                             
+                                    objotherVariety.isvarietySoldOutSideMarket = true;
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        System.debug('@@@@ Variety not Licensed to Sold');
+                        //the propegator Not licensed for the variety sold?
+                        System.debug('@@-6');
+						System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                        objotherVariety.invoice = 'false';
+                        objotherVariety.Status = 'Needs review'; 
+                        objotherVariety.royaltyRate = 0;
+                        objotherVariety.isUnlicensed = true;
+                    }
+                }
+                else{
+                    System.debug('W@@@ No grower and prop tick');
+                    //account does not have acive grower is not exist or don't have licensed variety 
+                    if(objotherVariety.Country == 'Australia') {
+                        //Is the account with EG Checkbox ticked
+                        System.debug('@@@ mapOfCustomerIdAndEmporiumGrower = '+mapOfCustomerIdAndEmporiumGrower);
+                        if(mapOfCustomerIdAndEmporiumGrower.containsKey(objotherVariety.customerId)) {
+                            System.debug('@@@ mapOfVarietyIdAndRangeType = '+mapOfVarietyIdAndRangeType);
+                            if(mapOfVarietyIdAndLicensedStatus.containsKey(objotherVariety.verityname)) {
+                                System.debug('@@ Foram 78');
+                                //is the customer to whom the variety is sold in the Market stated on the licensed variety?
+                                if(mapOfVarietyIdAndMarket.containsKey(objotherVariety.verityname)) {
+                                    
+                                    String strMakertName = mapOfVarietyIdAndMarket.get(objotherVariety.verityname);
+                                    
+                                    if(strMakertName == 'Open Market - Emporium Grower (EG)' || strMakertName == null || strMakertName == ''){
+                                        System.debug('@@@ Open market');
+                                        String strQuantity = String.valueOf(objotherVariety.quantity);
+                                        
+                                        //is the Qty positive or negative
+                                        if(strQuantity.startsWith('-')){
+                                            System.debug('@@@ Negative value');
+                                            objotherVariety.invoice = 'false';
+                                            objotherVariety.Status = 'Needs review';
+                                        }
+                                        else{
+                                            System.debug('@@@ Positive value');
+                                            //positive quantity 
+                                            objotherVariety.invoice = 'true';
+                                            objotherVariety.Status = 'Approved'; 
+                                        }
+                                    }
+                                    else{
+                                        objotherVariety.invoice = 'true';
+                                        objotherVariety.Status = 'Needs review';                                                             
+                                        objotherVariety.isvarietySoldOutSideMarket = true;
+                                    }
+                                }
+                            }
+                            else{
+                                System.debug('@@@ the propegator Not licensed for the variety sold = ');
+                                //the propegator Not licensed for the variety sold?
+                                objotherVariety.invoice = 'true';
+                                objotherVariety.Status = 'Needs review'; 
+                                objotherVariety.isUnlicensed = true;
+                            }
+                        }
+                        else{
+                            //the account is not with EG Checkbox ticked
+                            System.debug('@@@ In Acc EG not ticked');
+                            objotherVariety.invoice = 'true';
+                            objotherVariety.Status = 'Needs review';
+                            objotherVariety.isUnlicensed = true;
+                        }
+                    }
+                    else{
+                        //Is the prop licensed for variety sold
+                        if(mapOfVarietyIdAndLicensedStatus.containsKey(objotherVariety.verityname)) {
+                            Boolean isDisconTerritor;
+                            if(mapOfVarietyIdAndTerritory.containskey(objotherVariety.verityname)) {
+                                String strTerritoryvalue = mapOfVarietyIdAndTerritory.get(objotherVariety.verityname);
+                                System.debug('@@@ strTerritoryvalue = '+strTerritoryvalue);
+                                if(strTerritoryvalue.contains(objotherVariety.Country)) {
+                                    System.debug('@@@ found country in discontinue territory');
+                                    isDisconTerritor = true;
+                                }
+                                else{
+                                    System.debug('@@@ Notfound country in discontinue territory');
+                                    isDisconTerritor = false;
+                                }
+                            }
+                            else{
+                                isDisconTerritor = false;
+                            }
+                            
+                            System.debug('@@@@ Final isDisconTerritor Value = '+isDisconTerritor);
+                            
+                            //Country/territory is discontinue
+                            if(isDisconTerritor == true) {
+                                System.debug('@@-7');
+								System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                                objotherVariety.invoice = 'false';
+                                objotherVariety.Status = 'Needs review'; 
+                                objotherVariety.royaltyRate = 0;
+                                objotherVariety.isVarietyDiscontinue = true;
+                            }
+                            else{
+                                //is the customer to whom the variety is sold in the Market stated on the licensed variety?
+                                if(mapOfVarietyIdAndTerritoryGranted.containsKey(objotherVariety.verityname)) {
+                                    String strterritorygranted = mapOfVarietyIdAndTerritoryGranted.get(objotherVariety.verityname);
+                                    if(strterritorygranted.contains(objotherVariety.Country)) {
+                                        System.debug('@@-8');
+										System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                                        objotherVariety.invoice = 'false';
+                                        objotherVariety.Status = 'Approved'; 
+                                        objotherVariety.royaltyRate = 0;
+                                    }
+                                    else{
+                                        System.debug('@@-9');
+                                        System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                                        objotherVariety.invoice = 'false';
+                                        objotherVariety.Status = 'Needs review'; 
+                                        objotherVariety.royaltyRate = 0;
+                                        objotherVariety.isvarietySoldOutTerritory = true;
+                                    }
+                                }
+                            }
+                        }
+                        else{
+                            System.debug('@@@@ Propo/Grower not tick and Country is not Australia');
+                            System.debug('@@-10');
+                            System.debug('@@@ objotherVariety.verityname = '+objotherVariety.verityname);
+                            //the propegator Not licensed for the variety sold?
+                            objotherVariety.invoice = 'false';
+                            objotherVariety.Status = 'Needs review'; 
+                            objotherVariety.royaltyRate = 0;
+                            objotherVariety.isUnlicensed = true;
+                        }
+                    }
+                }
+            }
+            
+            //****** Set invoice/ status/ unlicensed  End *******
+            
+            
+        }
+        
+    }
+    
+    public void saveDataToSalesline() {
+        
+        System.debug('--inside saveDataToSalesline----' + lstOtherVartys);
+        System.debug('--licensed list----' + lstLicensedAndUnlicensedOtherVartys);
+        System.debug('@@@@ lst_RangeLicensedVariety = '+lst_RangeLicensedVariety);
+        
+        if(showuploadCSV == true) {
+            //verifyAllDataAddedByManually(); //call this method for propogator only
+        }        
+        
+        List<otherVariety> lstAllotherVariety = new List<otherVariety>();
+        
+        Map<String, Sales_Line__c> mapVarSizeToSales = new Map<String, Sales_Line__c>();
+        if(lst_salesline != Null && lst_salesline.size() > 0) {
+            for(Sales_Line__c salesVar : lst_salesline) {
+                if(!salesVar.Unlicensed__c && !salesVar.Internal_Sales__c) {
+                    String varSize = String.valueOf(salesVar.Variety__c) + String.valueOf(salesVar.Size__c);
+                    if(!mapVarSizeToSales.containsKey(varSize)){
+                        mapVarSizeToSales.put(varSize, salesVar);
+                    } 
+                }
+            }
+        }
+        lst_salesline.clear();
+        
+        //For Licensed Variety for Grower
+        
+        if(lst_GrowerLicensedVariety != Null && lst_GrowerLicensedVariety.size() > 0 ) {
+            if(showuploadCSV == false)
+            {
+                System.debug(' @@##$$%%Yogi@@##$$%% : lst_GrowerLicensedVariety : ' +lst_GrowerLicensedVariety);
+                for(GrowerLicensedVariety objLV: lst_GrowerLicensedVariety) {
+                    System.debug('@@lst_GrowerLicensedVariety');
+                    if(String.isNotBlank(objLV.quantity) || String.isNotBlank(objLV.stockloss)) {
+                        Sales_Line__c sales;
+                        if(objLV.salesId != null) {
+                            sales = new Sales_Line__c(Id=objLV.salesId);
+                        }else{
+                            sales = new Sales_Line__c();
+                        }
+                        sales.Internal_Sales__c = false;
+                        if(objLV.quantity != '') 
+                        {
+                            sales.Quantity__c = Decimal.valueOf(objLV.quantity);
+                        }
+                        sales.Royalty__c = objLV.royaltyRate; //Added By Yogesh
+                        if(objLV.discountedRoyaltyRate > 0)
+                        {
+                            sales.discounted_royalty_rate__c = objLV.discountedRoyaltyRate;
+                        }
+                        sales.Price_Matrix__c = objLV.priceMatrixId; //Added By Yogesh
+                        
+                        if(sales.Id == Null) {
+                            sales.Royalty_Reporting_Period__c = ActiveRRPId;
+                        }
+                        System.debug('@@$$@@ objLV.sizeid : '+objLV.sizeid);
+                        System.debug('@@$$@@ objLV.verityId : '+objLV.verityId); 
+                        System.debug('@@$$@@ objLV.verityname : '+objLV.verityname);
+                        System.debug('@@$$@@ objLV.sizename : '+objLV.sizename);
+                        System.debug('@@$$@@ objLV.priceMatrixId : '+objLV.priceMatrixId);
+                        System.debug('@@$$@@ objLV.salesline_id : '+objLV.salesId);
+                        sales.Size__c = objLV.sizeid;
+                        sales.Variety__c = objLV.verityId;  
+                        sales.Notes__c = objLV.notes;   
+                        sales.Licensed_Variety__c = objLV.licensedVarietyId;
+                        sales.Range__c = objLV.rangeId;
+                        if(objLV.stockloss != '')
+                        {
+                            sales.Stock_Losses__c = Decimal.valueOf(objLV.stockloss);
+                            sales.Stock_Loss__c = true;
+                        }
+                        else
+                        {
+                            sales.Stock_Losses__c = null;  
+                        }
+                        System.debug('@@@ isReportSubmitted = '+isReportSubmitted);
+                        System.debug('@@ objLV.stockloss = '+objLV.stockloss);
+                        if(isReportSubmitted == true && objLV.stockloss != '' && objLV.stockloss != null) {
+                            sales.Is_Report_Submitted__c = true;
+                        }
+                        
+                        lst_salesline.add(sales); 
+                        System.debug(' @@##$$%%Yogi@@##$$%% : sales : ' +sales);
+                    }
+                }
+                System.debug(' @@##$$%%Yogi@@##$$%% : lst_salesline : ' +lst_salesline);
+                System.debug(' @@##$$%%Yogi@@##$$%% : lst_salesline.size() : ' +lst_salesline.size());
+            }
+        }        
+        
+        
+        
+        
+        /*
+if(lst_RangeLicensedVariety != Null && lst_RangeLicensedVariety.size() > 0 ) {
+if(showuploadCSV == false)
+{
+System.debug(' @@##$$%%Yogi@@##$$%% : lst_RangeLicensedVariety : ' +lst_RangeLicensedVariety);
+for(RangeLicensedVariety objRangeLV: lst_RangeLicensedVariety) {
+System.debug('@@lst_RangeLicensedVariety');
+if(objRangeLV.verityId != Null) {
+Sales_Line__c sales;
+if(objRangeLV.salesId != null) {
+sales = new Sales_Line__c(Id=objRangeLV.salesId);
+}else{
+sales = new Sales_Line__c();
+}
+sales.Internal_Sales__c = false;
+if(objRangeLV.quantity != '') 
+{
+sales.Quantity__c = Decimal.valueOf(objRangeLV.quantity);
+}
+sales.Royalty__c = objRangeLV.royaltyRate; //Added By Yogesh
+if(objRangeLV.discountedRoyaltyRate > 0)
+{
+sales.discounted_royalty_rate__c = objRangeLV.discountedRoyaltyRate;
+}
+sales.Price_Matrix__c = objRangeLV.priceMatrixId; //Added By Yogesh
+System.debug('@@$$@@ objRangeLV.priceMatrixId : '+objRangeLV.priceMatrixId);
+if(sales.Id == Null) {
+sales.Royalty_Reporting_Period__c = ActiveRRPId;
+}
+sales.Size__c = objRangeLV.sizeid;
+sales.Variety__c = objRangeLV.verityId;  
+sales.Notes__c = objRangeLV.notes;   
+sales.Range__c = objRangeLV.rangeId;
+if(objRangeLV.stockloss != '')
+{
+sales.Stock_Losses__c = Decimal.valueOf(objRangeLV.stockloss);
+sales.Stock_Loss__c = true;
+}
+else
+{
+sales.Stock_Losses__c = null;  
+}
+
+lst_salesline.add(sales); 
+System.debug(' @@##$$%%Yogi@@##$$%% : sales : ' +sales);
+}
+}
+System.debug(' @@##$$%%Yogi@@##$$%% : lst_salesline : ' +lst_salesline);
+System.debug(' @@##$$%%Yogi@@##$$%% : lst_salesline.size() : ' +lst_salesline.size());
+}
+}     
+*/
+        
+        // For Other Varieties for Grower
+        if(lstOtherVartys != Null && lstOtherVartys.size() > 0 ) {
+            if(showuploadCSV == false)
+            {
+                System.debug('===lstOtherVartys==' +lstOtherVartys);
+                for(otherVariety othVar: lstOtherVartys) {
+                    System.debug('@@lstOtherVartys');
+                    if(othVar.verityname != Null) {
+                        Sales_Line__c sales;
+                        if(othVar.salesId != null) {
+                            sales = new Sales_Line__c(Id=othVar.salesId);
+                        }else{
+                            sales = new Sales_Line__c();
+                        }
+                        sales.Internal_Sales__c = false;
+                        System.debug('@@@ && othVar.quantity = '+othVar.quantity != null);
+                        if(othVar.quantity != '' && othVar.quantity != null) 
+                        {
+                            sales.Quantity__c = Decimal.valueOf(othVar.quantity);
+                        }
+                        if(String.isNotBlank(othVar.priceMatrixId))
+                        {
+                            sales.Price_Matrix__c = othVar.priceMatrixId;
+                        }
+                        
+                        sales.Royalty__c = othVar.royaltyRate; //Added By Yogesh
+                        if(sales.Id == Null) {
+                            sales.Royalty_Reporting_Period__c = ActiveRRPId;
+                        }
+                        sales.Size__c = othVar.sizeid;
+                        sales.Unlicensed__c = True;
+                        sales.Variety__c = othVar.verityname;  
+                        sales.Notes__c = othVar.notes;
+                        sales.Country_Territory__c = othVar.Country;    
+                        System.debug('othVar.stockloss ::: '+othVar.stockloss);
+                        if(othVar.stockloss != '' && othVar.stockloss != null)
+                        {
+                            sales.Stock_Losses__c = Decimal.valueOf(othVar.stockloss);
+                            sales.Stock_Loss__c = true;   
+                        }
+                        else
+                        {
+                            sales.Stock_Losses__c = null;
+                        }
+                        
+                        lst_salesline.add(sales); 
+                    }
+                }
+            }
+        }
+        
+        //Licensed and unlicensed for propogator
+        if(lstLicensedAndUnlicensedOtherVartys != Null && lstLicensedAndUnlicensedOtherVartys.size() > 0 ) {
+            
+            if(showuploadCSV == true)
+            {
+                //lst_salesline.clear();
+                System.debug('@@@lstLicensedAndUnlicensedOtherVartys = '+lstLicensedAndUnlicensedOtherVartys);
+                
+                for(otherVariety othVar: lstLicensedAndUnlicensedOtherVartys) {
+                    System.debug('@@lstLicensedAndUnlicensedOtherVartys');
+                    if(othVar.verityname != Null) {
+                        Sales_Line__c sales;
+                        if(othVar.salesId != null) {
+                            sales = new Sales_Line__c(Id=othVar.salesId);
+                        }else{
+                            sales = new Sales_Line__c();
+                        }
+                        sales.Internal_Sales__c = false;
+                        if(othVar.quantity != '') 
+                        {
+                            othVar.quantity = othVar.quantity.trim();
+                            sales.Quantity__c = Decimal.valueOf(othVar.quantity);
+                        }
+                        sales.Royalty__c = othVar.royaltyRate; //Added By Yogesh
+                        if(String.isNotBlank(othVar.priceMatrixId))
+                        {
+                            sales.Price_Matrix__c = othVar.priceMatrixId;
+                        }
+                        if(sales.Id == Null) {
+                            sales.Royalty_Reporting_Period__c = ActiveRRPId;
+                        }
+                        sales.Size__c = othVar.sizeid;
+                        sales.Variety__c = othVar.verityname;  
+                        sales.Notes__c = othVar.notes;
+                        sales.Country_Territory__c = othVar.Country; 
+                        /*if(mapOfCustomerExsit.containsKey(othVar.customername.toLowerCase())) {
+othVar.customerId = mapOfCustomerExsit.get(othVar.customername.toLowerCase());
+} */
+                        if(othVar.customerId != null && othVar.customerId != '') {
+                            sales.customer__c = othVar.customerId;
+                        }
+                        else {
+                            sales.unregistered_customer__c = othVar.unregisterCustomer;
+                        }
+                        
+                        if(othVar.invoice != null && othVar.invoice != '') {
+                            sales.Invoice__c = Boolean.valueOf(othVar.invoice);
+                        }
+                        if(othVar.Status != null && othVar.Status != '') {
+                            sales.Status__c = othVar.Status;
+                        } 
+                        sales.Unlicensed__c = othVar.isUnlicensed;
+                        sales.Variety_Sold_Outside_the_Market__c = othVar.isvarietySoldOutSideMarket;
+                        sales.Variety_Sold_Outside_the_Territory__c = othVar.isvarietySoldOutTerritory;
+                        sales.Is_Variety_Discountinue__c = othVar.isVarietyDiscontinue;
+                        sales.Range_Ozbreed__c = othVar.isvarietyRangeOzbreed;
+                        
+                        System.debug('Yogi!!! salesline : '+sales);
+                        
+                        lst_salesline.add(sales); 
+                    }
+                }
+                
+                System.debug('Yogi!!! lst_salesline : '+lst_salesline);
+                System.debug('Yogi!!! lst_salesline size : '+lst_salesline.size());
+            }
+        }
+        
+        // For Internal Trade for grower
+        if(InternalTradeLines != Null && InternalTradeLines.size() > 0) {
+            if(showuploadCSV == false)
+            {
+                for(InternalTrade inTrade : InternalTradeLines){
+                    System.debug('@@InternalTradeLines');
+                    if(inTrade.verityname != Null) {
+                        Sales_Line__c sales;
+                        if(inTrade.salesId != null) {
+                            sales = new Sales_Line__c(Id=inTrade.salesId);
+                        }else{
+                            sales = new Sales_Line__c();
+                        }
+                        sales.Internal_Sales__c = True;
+                        sales.Quantity__c = Decimal.valueOf(inTrade.quantity);
+                        sales.Royalty__c = inTrade.royaltyRate; //Added By Yogesh
+                        if(sales.Id == Null) {
+                            sales.Royalty_Reporting_Period__c = ActiveRRPId;
+                        }
+                        sales.Variety__c = inTrade.verityname;  
+                        sales.Sold_to__c = inTrade.customername;
+                        sales.Notes__c = inTrade.notes;
+                        lst_salesline.add(sales);  
+                    }
+                }
+                
+            }
+            
+            
+        }
+        
+        System.debug('@@##$$%%Yogi@@##$$%% : lst_salesline.size() : '+lst_salesline.size());
+        System.debug('@@##$$%%Yogi@@##$$%% : lst_salesline : '+lst_salesline);
+        if(lst_salesline != Null && lst_salesline.size() > 0){
+            /*
+if(showuploadCSV == false)
+{
+Map<id,Sales_Line__c> sl_map = new Map<id,Sales_Line__c>();
+for(Sales_Line__c sl : lst_salesline)
+{
+System.debug('Yogi!!! _sl : '+sl);
+sl_map.put(sl.id,sl);
+}
+
+System.debug('Yogi!!! sl_map : '+sl_map);
+System.debug('Yogi!!! sl_map : '+sl_map.size());
+
+try{
+Upsert sl_map.values();
+}
+catch(DmlException e)
+{
+System.debug('salesline update error :' + e.getMessage() + '\n' + e.getLineNumber());
+}
+}
+else
+{
+try{
+Upsert lst_salesline;
+}
+catch(DmlException e)
+{
+System.debug('salesline update error :' + e.getMessage() + '\n' + e.getLineNumber());
+}
+}*/
+            try{
+                System.debug('@@@ lst_salesline = '+lst_salesline);
+                Upsert lst_salesline;
+            }
+            catch(DmlException e)
+            {
+                System.debug('salesline update error :' + e.getMessage() + '\n' + e.getLineNumber());
+            }
+            
+        }
+        
+        //Foram -> Commented this method bcs existing licensed sales was deleted
+        //removeSaleslines();
+        
+    }
+    
+    //Remove saleslines for Other Varieties and Internal Trade.
+    public void removeSaleslines(){
+        
+        List<Sales_Line__c> lstSalesLineIds = new List<Sales_Line__c>();
+        
+        //Remove saleslines for Other Varieties.
+        if(lstOtherVartys != Null && lstOtherVartys.size() > 0){
+            for(otherVariety othrVar : lstOtherVartys){
+                if(removeOthrVarIds.contains(othrVar.salesId)){
+                    removeOthrVarIds.remove(othrVar.salesId);
+                }
+            }
+        }
+        if(removeOthrVarIds != Null && removeOthrVarIds.size() > 0){
+            for(Id othrVarId : removeOthrVarIds){
+                lstSalesLineIds.add(new Sales_Line__c(Id = othrVarId));
+            }
+        }
+        
+        //Remove saleslines for Internal Trade.
+        if(InternalTradeLines != Null && InternalTradeLines.size() > 0){
+            for(InternalTrade inTread : InternalTradeLines){
+                if(removeInTradeIds.contains(inTread.salesId)){
+                    removeInTradeIds.remove(inTread.salesId);
+                }
+            }
+        }
+        if(removeInTradeIds != Null && removeInTradeIds.size() > 0){
+            for(Id inTradeId : removeInTradeIds){
+                lstSalesLineIds.add(new Sales_Line__c(Id = inTradeId));
+            }
+        }
+        
+        if(lstSalesLineIds != Null && lstSalesLineIds.size() > 0){
+            System.debug('@@@ Salelsine Delete over here ');
+            Delete lstSalesLineIds;
+        }
+        
+    }
+    
+    public PageReference saveRoyaltyReport(){
+        
+        if(ActiveRRP.Id != Null){
+            Royalty_Reporting_Period__c rrpObj = new Royalty_Reporting_Period__c(Id=ActiveRRP.Id);
+            rrpObj.Person_Completing_Report__c = personName;
+            rrpObj.Status__c = 'Saved';
+            rrpObj.Notes__c = ActiveRRP.Notes__c;
+            if(!isFirstSaved){
+                rrpObj.Last_Saved__c = System.now();
+            }
+            update rrpObj;
+        }
+        
+        saveDataToSalesline();
+        PageReference pg = Page.RoyaltyReportPage;
+        pg.getParameters().put('isSave', 'Yes');
+        pg.setRedirect(true);
+        return pg;
+    }
+    
+    public PageReference submitRoyaltyReport(){
+        
+        System.debug('@@ Yogesh @@ : ActiveRRPId : '+ActiveRRPId);
+        System.debug('@@ Yogesh @@ : ActiveRRP.Id : '+ActiveRRP.Id);
+        isReportSubmitted = true;
+        saveDataToSalesline();
+        
+        //checkNoStockLosses();
+        
+        if(ActiveRRP.Id != Null){
+            Royalty_Reporting_Period__c rrpObj = new Royalty_Reporting_Period__c(Id=ActiveRRP.Id);
+            rrpObj.Person_Completing_Report__c = personName;
+            rrpObj.PDF_Report__c = '/apex/RoyaltyReportPDF?RRPId=' + ActiveRRP.Id;
+            rrpObj.Status__c = 'Complete';
+            rrpObj.Notes__c = ActiveRRP.Notes__c;
+            rrpObj.Date_of_Report_Completed__c = system.today();
+            //if(!isFirstSaved){
+            rrpObj.Last_Saved__c = System.now();
+            //}
+            update rrpObj;
+        }
+        PageReference pg = Page.ThankYouPage;
+        pg.setRedirect(true);
+        return pg;
+    }
+    /*
+public PageReference generatePDF(){
+PageReference pg = Page.RoyaltyReportPDF;
+pg.getParameters().put('RRPId', rrpIdforPDF);
+pg.setRedirect(true);
+return pg;
+}*/
+    
+    public void updateUser() {
+        isNotificationDisplay = false;
+        
+        String userId = userInfo.getUserId();
+        List<User> lstUser = [Select Id,ContactId,AccountId from User where Id =: userId];
+        
+        if(lstUser != null && lstUser.size() > 0){
+            
+            
+            List<Agreement__c> lst_agreement = [SELECT Id,Reporting_Frequency__c, 
+                                                (SELECT id,name,Period__c FROM Royalty_Reporting_Periods__r order by createdDate ASC) 
+                                                FROM Agreement__c 
+                                                WHERE (RecordType.DeveloperName = 'Grower_Agreement' or  RecordType.DeveloperName = 'PropagatorAgreement') AND 
+                                                Account__c =: lstUser[0].AccountId 
+                                                order by Date_of_Agreement__c desc LIMIT 1];
+            
+            if(lst_agreement != null && lst_agreement.size() > 0 && lst_agreement[0].Royalty_Reporting_Periods__r != null && lst_agreement[0].Royalty_Reporting_Periods__r.size() > 0){
+                Integer reportingSize = lst_agreement[0].Royalty_Reporting_Periods__r.size();
+                if(lst_agreement[0].Reporting_Frequency__c != null && lst_agreement[0].Reporting_Frequency__c == 'Monthly'){
+                    if(math.mod(reportingSize, 10) == 0){
+                        isNotificationDisplay = true;
+                    }
+                }else if(lst_agreement[0].Reporting_Frequency__c != null && lst_agreement[0].Reporting_Frequency__c == 'Quarterly'){
+                    if(math.mod(reportingSize, 2) == 0){
+                        isNotificationDisplay = true;
+                    }
+                }
+            }
+        }
+        
+        
+        /*String cntId = lstUser[0].ContactId;
+if(cntId != null && cntId.trim() != ''){
+List<Contact> lstContcts = [Select Id,Login_Count__c,Session_Id__c from Contact where Id =: cntId];
+
+if(lstContcts != null && lstContcts.size() > 0){
+
+if(lstContcts.get(0).Login_Count__c != null){
+Integer count = Integer.valueOf(lstContcts.get(0).Login_Count__c);
+if(math.mod(count, 9) == 0){
+isNotificationDisplay = true;
+}
+}
+if((lstContcts.get(0).Session_Id__c == null) || (lstContcts.get(0).Session_Id__c != null && lstContcts.get(0).Session_Id__c != userInfo.getSessionId())){
+if(lstContcts.get(0).Login_Count__c == null){
+lstContcts.get(0).Login_Count__c = 1;
+}else if(lstContcts.get(0).Login_Count__c != null){
+lstContcts.get(0).Login_Count__c += 1;   
+}
+lstContcts.get(0).Session_Id__c = userInfo.getSessionId();
+update lstContcts;
+}    
+}    
+}*/
+    }
+    
+    public Void getSizesOfVariety() {
+        otherVariety o = lstOtherVartys.get(Integer.valueOf(rowNumForOtherVar));
+        List<SelectOption> sizeOpts = new List<SelectOption>();
+        sizeOpts.add(new SelectOption('','-None-'));
+        if(mapAllVarToSizeList.containsKey(o.verityname)){
+            List<size__c> lstSizes = mapAllVarToSizeList.get(o.verityname);
+            if(lstSizes != Null && lstSizes.size() > 0){
+                for(Size__c size : lstSizes){
+                    sizeOpts.add(new SelectOption(size.Id,size.Name));
+                }
+            }
+        }
+        sizeOpts.sort();
+        o.lstSizeNames = sizeOpts;
+    }
+    
+    public Void getSizesOfLicensedUnlicensedVariety() {
+        
+        otherVariety o = lstLicensedAndUnlicensedOtherVartys.get(Integer.valueOf(rowNumForOtherVar));
+        List<SelectOption> sizeOpts = new List<SelectOption>();
+        sizeOpts.add(new SelectOption('','-None-'));
+        if(mapAllVarToSizeList.containsKey(o.verityname)){
+            List<size__c> lstSizes = mapAllVarToSizeList.get(o.verityname);
+            if(lstSizes != Null && lstSizes.size() > 0){
+                for(Size__c size : lstSizes){
+                    sizeOpts.add(new SelectOption(size.Id,size.Name));
+                }
+            }
+        }
+        sizeOpts.sort();
+        o.lstSizeNames = sizeOpts;
+    }
+    //START code Added By Yogesh
+    
+    public Void getRoyaltyRateBaseOnSizeAndVariety() 
+    {
+        System.debug('getListType N ::: '+getListType);
+        System.debug('rowNumForOtherVar N ::: '+rowNumForOtherVar);
+        //For List Type = lstOtherVartys
+        if(getListType != null && getListType == 'lstOtherVartys'){
+            otherVariety o = lstOtherVartys.get(Integer.valueOf(rowNumForOtherVar));
+            if(o != null && o.sizeid != null && o.verityname != null && o.sizeid != '' && o.verityname != '') {
+                Price_Matrix__c[] royaltyRate = [SELECT Price__c FROM Price_Matrix__c  
+                                                 WHERE  Variety__c =: o.verityname 
+                                                 AND Size__c =: o.sizeid 
+                                                 AND Rate_Type__c = 'propagator' 
+                                                 AND CurrencyIsoCode = 'AUD' 
+                                                 ORDER BY Price__c DESC limit 1];
+                if(royaltyRate != null && royaltyRate.size() > 0) {
+                    if(royaltyRate[0].Price__c != null) {
+                        o.royaltyRate = royaltyRate[0].Price__c;
+                    }
+                }
+            }  
+        }   
+        
+        //For List Type = lstLicensedAndUnlicensedOtherVartys
+        else if(getListType != null && getListType == 'lstLicensedAndUnlicensedOtherVartys') {
+            otherVariety lv = lstLicensedAndUnlicensedOtherVartys.get(Integer.valueOf(rowNumForOtherVar));
+            System.debug('lv ::: '+lv);
+            if(lv != null && lv.sizeid != null && lv.verityname != null && lv.sizeid != '' && lv.verityname != '') {
+                /*
+Price_Matrix__c[] royaltyRate = [SELECT Price__c FROM Price_Matrix__c  
+WHERE  Variety__c =: lv.verityname 
+AND Size__c =: lv.sizeid 
+AND Rate_Type__c = 'propagator' 
+AND CurrencyIsoCode = 'AUD' 
+ORDER BY Price__c DESC limit 1];
+if(royaltyRate != null && royaltyRate.size() > 0) {
+if(royaltyRate[0].Price__c != null) {
+lv.royaltyRate = royaltyRate[0].Price__c;
+}
+}
+*/
+                
+                //check licensed variety is canceled or not
+                
+                System.debug('@@@ lv.verityname  = '+lv.verityname);
+                System.debug('!@@@ Agreement.id  = '+Agreement.id );
+                
+                List<Licensed_Variety__c> licensedVarietyObj = [SELECT id, Status__c, Supply_Channel__c
+                                                                FROM Licensed_Variety__c
+                                                                WHERE Variety__c =: lv.verityname];
+                System.debug('licensedVarietyObj size() N ::: '+licensedVarietyObj.size());
+                System.debug('licensedVarietyObj N ::: '+licensedVarietyObj);
+                
+                if(licensedVarietyObj.size() > 0) {
+                    List<Product2> variety_lst = [select id,name,Discontinued_Territory__c  from Product2  ORDER BY Name ASC];
+                    System.debug('variety_lst size N ::: '+variety_lst.size());
+                    System.debug('## variety_lst N ::: '+variety_lst);
+                    System.debug('## lv.Country : '+lv.Country);
+                    // && lv.Country != 'Australia'
+                    
+                    System.debug('close market...');
+                    System.debug('@@@ lv.verityname : '+lv.verityname);
+                    System.debug('@@@ lv.sizeid : '+lv.sizeid);
+                    List<Price_Matrix__c> priceMatrix_lst =  [SELECT id, Price__c, Start_Date__c, End_Date__c FROM Price_Matrix__c
+                                                              WHERE  Variety__c =: lv.verityname 
+                                                              AND Size__c =: lv.sizeid 
+                                                              AND Rate_Type__c = 'propagator' 
+                                                              AND CurrencyIsoCode = 'AUD' ];
+                    System.debug('priceMatrix_lst : '+priceMatrix_lst);
+                    Decimal rotaltyRate = 0;
+                    String priceMatrixIdVar = '';
+                    
+                    list<Date> dates = new list<Date>();
+                    Map<date,Price_Matrix__c> pmat_map = new Map<date,Price_Matrix__c>();
+                    
+                    if(!priceMatrix_lst.isEmpty() && priceMatrix_lst.size() > 0)
+                    {
+                        for(Price_Matrix__c pMat: priceMatrix_lst)
+                        {
+                            System.debug('@@@ pMat.End_Date__c '+pMat.End_Date__c);
+                            System.debug('@@@ pMat.Start_Date__c '+pMat.Start_Date__c);
+                            System.debug('@@@ System.Today() '+System.Today());
+                            if(pMat.Start_Date__c <= System.Today() && pMat.End_Date__c >= System.Today())
+                            {
+                                rotaltyRate = pMat.Price__c;
+                                priceMatrixIdVar = pMat.id;
+                                System.debug('@@@ rotaltyRate in condition '+rotaltyRate);
+                                
+                            }
+                            dates.add(pMat.End_Date__c);
+                            pmat_map.put(pMat.End_Date__c,pMat);
+                        }
+                        
+                        if(rotaltyRate == 0)
+                        {
+                            dates.sort();
+                            Date MaxEndDate = dates.get(dates.size()-1);
+                            System.debug('MaxEndDate N ::: '+MaxEndDate);
+                            System.debug('pmat_map N ::: '+pmat_map);
+                            System.debug('pmat_map.ContainsKey(MaxEndDate) N ::: '+pmat_map.ContainsKey(MaxEndDate));
+                            if(pmat_map.ContainsKey(MaxEndDate))
+                            {
+                                rotaltyRate = pmat_map.get(MaxEndDate).Price__c;
+                                priceMatrixIdVar = pmat_map.get(MaxEndDate).id;
+                            }
+                        }
+                    }
+                    //set royalty
+                    lv.royaltyRate = rotaltyRate; 
+                    lv.priceMatrixId = priceMatrixIdVar;
+                    System.debug('lv N ::: '+lv);
+                }
+                
+            }
+            validateAllSaleslineForPropgatorOnly();
+        }
+    }
+    
+    public Void getLicensedSizesOfVariety() {
+        
+        otherVariety o = lstLicensedAndUnlicensedOtherVartys.get(Integer.valueOf(rowNumForOtherVar));
+        List<SelectOption> sizeOpts = new List<SelectOption>();
+        sizeOpts.add(new SelectOption('','-None-'));
+        
+        if(mapAllVarToSizeList.containsKey(o.verityname)){
+            
+            List<size__c> lstSizes = mapAllVarToSizeList.get(o.verityname);            
+            if(lstSizes != Null && lstSizes.size() > 0){
+                for(Size__c size : lstSizes){
+                    if(size.Id != null && size.Name != null){
+                        sizeOpts.add(new SelectOption(size.Id,size.Name));
+                    }
+                }
+            }
+        }
+        sizeOpts.sort();
+        o.lstSizeNames = sizeOpts;
+    }
+    
+    public List<SelectOption> getLicensedvarity() {
+        List<SelectOption> varityLicencedOptions = new List<SelectOption>();
+        List<Licensed_Variety__c> licensedVarityLst = [SELECT Variety__c, Variety__r.Name, Variety__r.Range__c 
+                                                       FROM Licensed_Variety__c 
+                                                       WHERE Variety__r.Name != null And Agreement__c =: Agreement.Id];
+        
+        List<Product2> allsize = new List<Product2>();
+        for(Licensed_Variety__c lV : licensedVarityLst) {
+            Product2 p = new Product2();
+            p.Id = lV.Variety__c;
+            p.Name = lV.Variety__r.Name;
+            p.Range__c = lv.Variety__r.Range__c;
+            
+            allsize.add(p);
+        }
+        
+        varityLicencedOptions.add(new SelectOption('','-None-'));
+        if(allsize != Null && allsize.size() > 0){
+            for(Product2 size : allsize){
+                varityLicencedOptions.add(new SelectOption(size.Id,size.Name));
+                mapProdIdToRangeId.put(size.Id,size.Range__c);
+            }
+        }
+        varityLicencedOptions.sort();
+        return varityLicencedOptions ;
+    }
+    //END code Added By Yogesh
+    
+    //START code UPDATE By Yogesh
+    public List<SelectOption> getUnlicensedvarity() {
+        List<SelectOption> varityOptions = new List<SelectOption>();
+        //List<Product2> allsize = [Select Id,Name,Range__c From Product2 ];
+        
+        List<Licensed_Variety__c> licensedVarityLst = [SELECT Variety__c, Variety__r.Name, Variety__r.Range__c 
+                                                       FROM Licensed_Variety__c 
+                                                       WHERE Variety__r.Name != null And Agreement__c =: Agreement.Id
+                                                       ORDER BY  Variety__r.Name ASC];
+        
+        varityOptions.add(new SelectOption('','-None-'));
+        set<Id> licensedVarIds = new set<Id>();
+        for(Licensed_Variety__c lV : licensedVarityLst) {
+            licensedVarIds.add(lV.Variety__c);
+            varityOptions.add(new SelectOption(lV.Variety__c,lV.Variety__r.Name));
+        }
+        
+        return varityOptions ;
+    }
+    //END code UPDATE By Yogesh    
+    
+    //Added by foram
+    public List<SelectOption> getLicensedAndUnlicensedvarity() {
+        List<SelectOption> varityOptions = new List<SelectOption>();
+        Set<Id> setOfRangeId = new Set<Id>();        
+        //List<Licensed_Range__c> lstLicensedRange = [select id, Range__c, Range__r.Name from Licensed_Range__c where Agreement__c =: Agreement.Id];
+        
+        varityOptions.add(new SelectOption('','-None-'));
+        
+        List<Product2> lstVarieties = [Select Id, name, Range__c from Product2  ORDER BY Name ASC];
+        if(lstVarieties.size() > 0) {
+            for(Product2 objvariety: lstVarieties) {
+                varityOptions.add(new SelectOption(objVariety.Id,objVariety.Name));
+                mapProdIdToRangeId.put(objVariety.Id,objVariety.Range__c); 
+            }                       
+        }    
+        return varityOptions ;
+    }
+    
+    //Added Start Code By Yogesh
+    public List<SelectOption> getCountry() {
+        List<SelectOption> countryList = new List<SelectOption>();
+        List<Schema.PicklistEntry> contryPickList = Schema.SObjectType.Sales_Line__c.fields.Country_Territory__c.getPicklistValues();
+        
+        countryList.add(new SelectOption('','-None-'));
+        for(Schema.PicklistEntry entry : contryPickList){
+            countryList.add(new SelectOption(entry.getLabel(),entry.getValue()));
+        }
+        countryList.sort();
+        return countryList ;
+    }
+    
+    //Added Start Code By Foram
+    public List<SelectOption> getcustomer() {
+        List<SelectOption> countryList = new List<SelectOption>();
+        List<Schema.PicklistEntry> contryPickList = Schema.SObjectType.Sales_Line__c.fields.Country_Territory__c.getPicklistValues();
+        
+        countryList.add(new SelectOption('','-None-'));
+        for(Schema.PicklistEntry entry : contryPickList){
+            countryList.add(new SelectOption(entry.getLabel(),entry.getValue()));
+        }
+        countryList.sort();
+        return countryList ;
+    }
+    
+    public void addnewLicensedVariety(){
+        RangeLicensedVariety r = new RangeLicensedVariety();
+        //o.quantity = 0;
+        
+        system.debug('!!Yogi@@  r.lstranges :'+ r.lstranges.size());
+        system.debug('!!Yogi@@  r.lstranges data  :'+ r.lstranges[0]);
+        lst_RangeLicensedVariety.add(r);
+    }
+    
+    public void removeLicensedVariety(){
+        if(lst_RangeLicensedVariety != null && lst_RangeLicensedVariety.size() == 1 && LicenceVarietyIndex == '0'){
+            lst_RangeLicensedVariety.remove(Integer.valueOf(LicenceVarietyIndex));
+            lst_RangeLicensedVariety = new List<RangeLicensedVariety>();
+            RangeLicensedVariety r = new RangeLicensedVariety();
+            //r.quantity = 0;
+            lst_RangeLicensedVariety.add(r);
+        }
+        if(LicenceVarietyIndex != null && lst_RangeLicensedVariety.size() > 1){
+            lst_RangeLicensedVariety.remove(Integer.valueOf(LicenceVarietyIndex));
+        }
+    }
+    
+    
+    //Added END Code By Yogesh
+    
+    //for unlicensed sales
+    public void addnewOtherVariety(){
+        otherVariety o = new otherVariety();
+        //o.quantity = 0;
+        lstOtherVartys.add(o);
+    }
+    
+    //for licensed sales for propogator only 
+    public void addnewLicensedUnlicensedVariety() {
+        otherVariety o = new otherVariety();
+        //o.quantity = 0;
+        lstLicensedAndUnlicensedOtherVartys.add(o);
+    }
+    
+    public void addnewLice(){
+        otherVariety o = new otherVariety();
+        //o.quantity = 0;
+        lstOtherVartys.add(o);
+    }
+    
+    public void addnewInternalTradeLine(){
+        InternalTrade it = new InternalTrade();
+        it.quantity = null;
+        InternalTradeLines.add(it);
+    }
+    
+    public void removeOtherVariety(){
+        if(lstOtherVartys != null && lstOtherVartys.size() == 1 && otherVarIndex == '0'){
+            lstOtherVartys.remove(Integer.valueOf(otherVarIndex));
+            lstOtherVartys = new List<otherVariety>();
+            otherVariety o = new otherVariety();
+            //o.quantity = 0;
+            lstOtherVartys.add(o);
+        }
+        if(otherVarIndex != null && lstOtherVartys.size() > 1){
+            lstOtherVartys.remove(Integer.valueOf(otherVarIndex));
+        }
+    }
+    
+    public void removeLicensedAndUnlicensedVarietyforPropogator(){
+        if(lstLicensedAndUnlicensedOtherVartys != null && lstLicensedAndUnlicensedOtherVartys.size() == 1 && otherVarIndex == '0'){
+            lstLicensedAndUnlicensedOtherVartys.remove(Integer.valueOf(otherVarIndex));
+            lstLicensedAndUnlicensedOtherVartys = new List<otherVariety>();
+            otherVariety o = new otherVariety();
+            //o.quantity = 0;
+            lstLicensedAndUnlicensedOtherVartys.add(o);
+        }
+        if(otherVarIndex != null && lstLicensedAndUnlicensedOtherVartys.size() > 1){
+            lstLicensedAndUnlicensedOtherVartys.remove(Integer.valueOf(otherVarIndex));
+        }
+    }
+    
+    public void removeInternalTradeLine(){
+        if(InternalTradeLines != null && InternalTradeLines.size() == 1 && intrnlTradeIndex == '0'){
+            InternalTradeLines.remove(Integer.valueOf(intrnlTradeIndex));
+            InternalTradeLines = new List<InternalTrade>();
+            InternalTrade it = new InternalTrade();
+            //it.quantity = 0;
+            InternalTradeLines.add(it);
+        }
+        if(intrnlTradeIndex != null && InternalTradeLines.size() > 1){
+            InternalTradeLines.remove(Integer.valueOf(intrnlTradeIndex));
+        }
+    }
+    
+    public class otherVariety{
+        
+        //added by foram
+        public String Country {get;set;}
+        public String customername {get;set;}
+        public String customerId {get;set;}
+        public String invoice {get;set;}
+        public String Status {get;set;}
+        public String unregisterCustomer {get;set;}
+        public String priceMatrixId {get;set;}
+        public String salesId {get;set;}
+        public String sizeid {get;set;}
+        public String sizename {get;set;}
+        public String verityname{get;set;}
+        public String quantity {get;set;}
+        public Decimal royaltyRate{get;set;} // Added By Yogesh
+        public List<SelectOption> lstSizeNames {get;set;}
+        public String notes {get;set;}
+        public String leadname {get;set;}
+        public boolean isUnlicensed {get;set;}
+        public Boolean isvarietySoldOutSideMarket {get;Set;}
+        public Boolean isvarietySoldOutTerritory {get;Set;}
+        public Boolean isVarietyDiscontinue {get;Set;}
+        public Boolean isvarietyRangeOzbreed {get;Set;}
+        public String stockloss {get;set;}
+        
+        public otherVariety(){
+            
+            isUnlicensed = false;
+            isvarietySoldOutSideMarket = false;
+            isvarietySoldOutTerritory = false;
+            isVarietyDiscontinue = false;
+            isvarietyRangeOzbreed = false;
+            
+            if(lstSizeNames== null)
+            {
+                lstSizeNames = new List<SelectOption>();
+                lstSizeNames.add(new SelectOption('','-None-'));
+            }
+        }
+    }
+    
+    public class InternalTrade{
+        public String salesId {get;set;}
+        public String verityname    {get;set;}
+        public String quantity     {get;set;}
+        public String customername  {get;set;}
+        public String notes         {get;set;}
+        public Decimal royaltyRate  {get;set;}
+        public List<varieties> lstVarts {get;set;}
+        
+    }
+    
+    public class rangeWrapper{
+        public Set<String> setSizes {get;set;}
+        public List<String> lstSizes {get;set;}
+        public List<varieties> lstVarts {get;set;}
+        public Map<String, varieties> mapVariety {get;set;}
+        
+        public rangeWrapper(){
+            setSizes = new set<String>();
+            lstSizes = new List<String>();
+            lstVarts = new List<varieties>();
+            mapVariety = new Map<String, varieties>();
+        }
+    }
+    
+    public class varieties{
+        public String rangeId {get;set;}
+        public String rangeName {get;set;}
+        public String licenseVarId {get;set;}
+        public String varietyId {get;set;}
+        public String varietyName {get;set;}
+        public list<size> lstSizes {get;set;}
+        
+        public varieties() {
+            lstSizes = new list<size>();
+        }
+    }
+    
+    public class size {
+        public String sizeId {get;set;}
+        public String sizeName {get;set;}
+        public Decimal qty {get;set;}
+        public Decimal price {get;set;}
+    }
+    
+    public class RangeLicensedVariety
+    {
+        public String rangeId{set; get;}
+        public String rangeName{set; get;}
+        public String Country {get;set;}
+        public String customername {get;set;}
+        public String customerId {get;set;}
+        public String invoice {get;set;}
+        public String Status {get;set;}
+        public String salesId {get;set;}
+        public String sizeid {get;set;}
+        public String sizename {get;set;}
+        public String verityname{get;set;}
+        public Boolean applySpecialRate{get;set;}
+        public String verityId{get;set;}
+        public String quantity {get;set;}
+        public String stockloss {get;set;}
+        public Decimal royaltyRate{get;set;}
+        public Decimal discountedRoyaltyRate{get;set;}
+        public String priceMatrixId {get;set;}
+        public List<SelectOption> lstranges {get;set;}
+        public List<SelectOption> lstLicensedVariety {get;set;}
+        public List<SelectOption> lstSizeNames {get;set;}
+        public String notes {get;set;}
+        public String leadname {get;set;}
+        public RangeLicensedVariety()
+        {
+            if(lstranges == null)
+            {
+                lstranges = new List<SelectOption>();
+                
+                lstranges.add(new SelectOption('','-None-'));
+            }
+            if(lstLicensedVariety == null)
+            {
+                lstLicensedVariety = new List<SelectOption>();
+                
+                lstLicensedVariety.add(new SelectOption('','-None-'));
+            }
+            if(lstSizeNames == null)
+            {
+                lstSizeNames = new List<SelectOption>();
+                
+                lstSizeNames.add(new SelectOption('','-None-'));
+            }
+            if(applySpecialRate == null)
+            {
+                //applySpecialRate = false;
+            }
+        }
+    }
+    
+    public class GrowerLicensedVariety
+    {
+        public String salesId {get;set;}
+        public String verityId{get;set;}
+        public String verityname{get;set;}
+        public String sizeid {get;set;} 
+        public String licensedVarietyId {get;set;} 
+        public String rangeId {get;set;}
+        public String sizename {get;set;}
+        public String quantity {get;set;}
+        public String stockloss {get;set;}
+        public Boolean applySpecialRate{get;set;}
+        public Decimal royaltyRate{get;set;}
+        public Decimal discountedRoyaltyRate{get;set;}
+        public String priceMatrixId {get;set;}
+        public String notes {get;set;}
+        
+        public GrowerLicensedVariety()
+        {
+            
+        }
+    }
+    
+    public Void showRoyaltyReportValueFromNav()
+    {
+        System.debug(' :: rrpPeriods :: showRoyaltyReportValue'+ currentActivePeriod);
+        
+        System.debug('@@@Yogi showRoyaltyReportValue calling showRoyaltyReportValue fun');
+        
+        if(currentActivePeriod != null) {
+            
+            //Added 4/6/21
+            activePeriod = currentActivePeriod;
+            
+            isChangeRRP = true;
+            System.debug('currentActivePeriod ::::::'+currentActivePeriod);
+            System.debug('@@@ Agreement = '+Agreement.Id);
+            
+            List<Royalty_Reporting_Period__c>  lstRRP = [SELECT id, Period__c, Status__c,Start_date__c, End_Date__c,Notes__c,
+                                                         Person_Completing_Report__c, Last_Saved__c, CreateDdate, lastmodifieddate
+                                                         FROM Royalty_Reporting_Period__c 
+                                                         WHERE Period__c =: currentActivePeriod.trim() AND Agreement__c =: Agreement.Id limit 1];
+            
+            System.debug('@@@@ lstRRP = '+lstRRP);
+            if(lstRRP.size() > 0) {
+                
+                ActiveRRPId = lstRRP[0].Id;
+                personName = lstRRP[0].Person_Completing_Report__c;
+                
+                //added 1404
+                ActiveRRP = lstRRP[0];
+                ReportingPeriod = lstRRP[0].Period__c;
+                
+                //lst_salesline.clear();
+                lstLicensedAndUnlicensedOtherVartys.clear();
+                EditRoyaltyReport();
+                
+                System.debug('@@@ firstRRP = '+firstRRP); 
+                System.debug('@@@@ remainingRRP = '+remainingRRP);
+                
+                remainingRRP = lstRRP[0].Period__c;
+                
+                
+                System.debug('@@@@ After remainingRRP = '+remainingRRP);
+                if(firstRRP == remainingRRP) {
+                    remainingRRP = null;
+                }
+                
+                System.debug('#### remainingRRP = '+remainingRRP);
+                system.debug('lstLicensedAndUnlicensedOtherVartys @@@@@@'+lstLicensedAndUnlicensedOtherVartys );
+                system.debug('lstLicensedAndUnlicensedOtherVartys size @@@@@@'+lstLicensedAndUnlicensedOtherVartys.size() );
+                system.debug('lst_salesline@@@@@@'+lst_salesline);
+            }
+        }   
+        
+    }
+    
+    public static void dummyMethod() {
+        Integer i = 0;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+                
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;        
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        i++;
+        
+    }
+}

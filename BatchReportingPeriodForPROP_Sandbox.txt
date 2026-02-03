@@ -1,0 +1,112 @@
+global with sharing class BatchReportingPeriodForPROP implements Database.Batchable<SObject>  {
+    
+    global Database.QueryLocator  start(Database.BatchableContext BC)  {
+        return Database.getQueryLocator('Select Id, Name , Date_of_Agreement__c, Account__c, Account__r.Email_for_Portal_Reminders__c, '+
+                                        ' Status__c, Reporting_Frequency__c, Agreement_Cancellation_Date__c, Sell_Off_Date__c, ' +
+                                        '(Select Id, Name, CreatedDate, Start_date__c, End_date__c, Status__c, Frequency__c ' + 
+                                        'From Royalty_Reporting_Periods__r ' +
+                                        'Order By CreatedDate DESC LIMIT 1)' + 
+                                        ' From Agreement__c ' + 
+                                        'Where RecordType.DeveloperName =\'PropagatorAgreement\' AND ' +
+                                        ' Status__c = \'Active\' ');
+    }
+    
+    global void execute(Database.BatchableContext BC, List<SObject> scope){
+        List<Royalty_Reporting_Period__c> lstRoyltyPeriods = new List<Royalty_Reporting_Period__c>();
+        Agreement__c agr;
+        for(SObject s : scope){
+            agr = (Agreement__c)s;
+            
+            Royalty_Reporting_Period__c lastRRP;
+            if(agr.Royalty_Reporting_Periods__r != Null && agr.Royalty_Reporting_Periods__r.size() > 0){
+                lastRRP = agr.Royalty_Reporting_Periods__r[0];
+            }
+            //Date todayDate = System.today(); //Use for batch
+            
+            //Use for Testing
+            Date todayDate;
+            Date newRRPStartDate;
+            Integer newnumberOfDays;
+            Date newRRPEndDate;            
+            Boolean isCreateRRP = false;
+            if(agr.Reporting_Frequency__c != null && agr.Reporting_Frequency__c == 'Monthly'){
+                if(lastRRP == NUll){
+                    todayDate = System.today();
+                    newRRPStartDate = todayDate.toStartOfMonth();
+                    isCreateRRP = true;
+                }else{
+                    todayDate = lastRRP.End_Date__c;
+                    newRRPStartDate = todayDate.addMonths(1).toStartOfMonth();
+                    isCreateRRP = true;
+                }
+                newnumberOfDays = Date.daysInMonth(newRRPStartDate.year(),newRRPStartDate.month());
+                newRRPEndDate = Date.newInstance(newRRPStartDate.year(), newRRPStartDate.month(), newnumberOfDays);
+            }else if(agr.Reporting_Frequency__c != null && agr.Reporting_Frequency__c == 'Quarterly'){
+                if(lastRRP == NUll){
+                    todayDate = System.today();
+                    newRRPStartDate = todayDate.toStartOfMonth();
+                }else{
+                    if(lastRRP.End_Date__c != null){
+                      todayDate = lastRRP.End_Date__c;  
+                    }
+                    if(todayDate != null){
+                       newRRPStartDate = todayDate.addMonths(1).toStartOfMonth(); 
+                    }
+                }
+                
+                /*newnumberOfDays = Date.daysInMonth(newRRPStartDate.year(),newRRPStartDate.addMonths(2).month());
+				newRRPEndDate = Date.newInstance(newRRPStartDate.year(), newRRPStartDate.addMonths(2).month(), newnumberOfDays);*/
+                Date Q1 = Date.newInstance(newRRPStartDate.year(), 3, 31);
+                Date Q2 = Date.newInstance(newRRPStartDate.year(), 6, 30);
+                Date Q3 = Date.newInstance(newRRPStartDate.year(), 9, 30);
+                Date Q4 = Date.newInstance(newRRPStartDate.year(), 12, 31);
+                
+                if(newRRPStartDate <= Q1){
+                    newRRPEndDate = Q1;
+                }else if(Q1 < newRRPStartDate && newRRPStartDate <= Q2){
+                    newRRPEndDate = Q2;
+                }else if(Q2 < newRRPStartDate && newRRPStartDate <= Q3){
+                    newRRPEndDate = Q3;
+                }else if(Q3 < newRRPStartDate && newRRPStartDate <= Q4){
+                    newRRPEndDate = Q4;
+                }
+                
+                if(System.today() == Q1 || System.today() == Q2 || System.today() == Q3 || System.today() == Q4){
+                    isCreateRRP = true;    
+                }
+                if(Test.isRunningTest()){
+                    isCreateRRP = true;
+                }
+            }
+            
+            
+            //Integer newnumberOfDays = Date.daysInMonth(newRRPStartDate.year(),newRRPStartDate.month());
+            //Date newRRPEndDate = Date.newInstance(newRRPStartDate.year(), newRRPStartDate.month(), newnumberOfDays);
+            
+            if(((agr.Sell_Off_Date__c != Null && newRRPStartDate != Null && newRRPStartDate <= agr.Sell_Off_Date__c) || agr.Sell_Off_Date__c == Null) && isCreateRRP){
+                List<recordtype> lstrecordtype = [Select Id, Name, DeveloperName from recordtype where DeveloperName = 'Propogator'];
+                Royalty_Reporting_Period__c newRRP = new Royalty_Reporting_Period__c();
+                if(lstrecordtype.size() > 0) {
+                    newRRP.recordTypeId = lstrecordtype[0].id;
+                }
+                newRRP.Start_date__c = newRRPStartDate;
+                newRRP.End_date__c = newRRPEndDate;
+                newRRP.Account__c    = agr.Account__c;
+                newRRP.Email_for_Portal_Reminders__c = agr.Account__r.Email_for_Portal_Reminders__c;
+                newRRP.Status__c     = 'Ready';
+                newRRP.Frequency__c  = agr.Reporting_Frequency__C;
+                newRRP.Agreement__c  = agr.Id;
+                System.debug('New RRP: ' + newRRP);
+                lstRoyltyPeriods.add(newRRP);
+            }
+        }
+        
+        if(lstRoyltyPeriods != null && lstRoyltyPeriods.size() > 0){
+            insert lstRoyltyPeriods;
+        }
+    }
+    
+    global void finish(Database.BatchableContext BC) {
+        
+    }    
+}
